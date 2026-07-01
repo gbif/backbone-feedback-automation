@@ -11,7 +11,7 @@ cb_name_usage = function(
     key = "3LXR",
     verbose = FALSE
 ) {
-  # https://api.checklistbank.org/dataset/3LXRC/match/nameusage?q=Telegonus%20favilla
+  # https://api.checklistbank.org/dataset/3LXR/match/nameusage?q=Telegonus%20favilla
   base_url = "https://api.checklistbank.org/dataset/"
   url <- paste0(base_url, key, "/match/nameusage?")
   

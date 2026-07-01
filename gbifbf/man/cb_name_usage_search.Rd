@@ -4,12 +4,12 @@
 \alias{cb_name_usage_search}
 \title{Search ChecklistBank by taxon ID}
 \usage{
-cb_name_usage_search(TAXON_ID = NULL, key = "3LXRC", limit = 1000)
+cb_name_usage_search(TAXON_ID = NULL, key = "3LXR", limit = 1000)
 }
 \arguments{
 \item{TAXON_ID}{Taxon ID to search for}
 
-\item{key}{ChecklistBank dataset key (default: "3LXRC")}
+\item{key}{ChecklistBank dataset key (default: "3LXR")}
 
 \item{limit}{Maximum number of results (default: 1000)}
 }

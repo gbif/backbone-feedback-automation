@@ -2,13 +2,13 @@
 #'
 #' Search the ChecklistBank API using a taxon ID
 #' @param TAXON_ID Taxon ID to search for
-#' @param key ChecklistBank dataset key (default: "3LXRC")
+#' @param key ChecklistBank dataset key (default: "3LXR")
 #' @param limit Maximum number of results (default: 1000)
 #' @return List with result data frame
 #' @export
 cb_name_usage_search <- function(
   TAXON_ID = NULL,
-  key = "3LXRC",
+  key = "3LXR",
   limit=1000
 ) {
   # https://api.checklistbank.org/dataset/308637/nameusage/search?TAXON_ID=9WLSS

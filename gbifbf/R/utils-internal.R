@@ -25,8 +25,8 @@ strip_html <- function(html_text) {
 }
 
 # Get taxon details by ID
-cb_get_taxon_by_id <- function(id, key = "3LXRC") {
-  # https://api.checklistbank.org/dataset/3LXRC/nameusage/8HRN9
+cb_get_taxon_by_id <- function(id, key = "3LXR") {
+  # https://api.checklistbank.org/dataset/3LXR/nameusage/8HRN9
   url <- paste0("https://api.checklistbank.org/dataset/", key, "/nameusage/", id)
   
   user <- Sys.getenv("GBIF_USER")
@@ -56,6 +56,42 @@ cb_get_taxon_by_id <- function(id, key = "3LXRC") {
   return(tibble::tibble())
 }
 
+# Build classification by traversing parent chain
+cb_get_classification_by_id <- function(id, key = "3LXR") {
+  classification <- character()
+  user <- Sys.getenv("GBIF_USER")
+  pwd <- Sys.getenv("GBIF_PWD")
+  
+  # Get starting taxon
+  taxon <- cb_get_taxon_by_id(id, key = key)
+  if(nrow(taxon) == 0) return(character())
+  
+  current_id <- taxon$parentId
+  
+  # Traverse up the parent chain
+  while(!is.na(current_id) && current_id != "" && !is.null(current_id)) {
+    url <- paste0("https://api.checklistbank.org/dataset/", key, "/nameusage/", current_id)
+    parent <- tryCatch({
+      httr::GET(url, httr::authenticate(user, pwd)) |>
+        httr::content(as = "text", encoding = "UTF-8") |>
+        jsonlite::fromJSON(flatten = TRUE)
+    }, error = function(e) NULL)
+    
+    if(!is.null(parent) && !is.null(parent$label)) {
+      classification <- c(classification, parent$label)
+      gbif_message("Added parent: ", parent$label)
+      current_id <- parent$parentId
+    } else {
+      break
+    }
+    
+    # Safety limit to prevent infinite loops
+    if(length(classification) > 50) break
+  }
+  
+  return(classification)
+}
+
 # Parse a taxonomic name
 cb_name_parser <- function(q=NULL) {
   # https://api.checklistbank.org/parser/name?q=Tiphiidae%20Leach%2C%201915
@@ -76,7 +112,7 @@ cb_name_parser <- function(q=NULL) {
 # Get synonyms for a taxon
 get_syns <- function(col_id = NULL) {
 
-url = paste0("https://api.checklistbank.org/dataset/3LXRC/taxon/", col_id, "/info")
+url = paste0("https://api.checklistbank.org/dataset/3LXR/taxon/", col_id, "/info")
 
 s = httr::GET(url,
   httr::authenticate(Sys.getenv("GBIF_USER"), Sys.getenv("GBIF_PWD"))) |> 
@@ -94,7 +130,7 @@ return(ss)
 # Get dataset source information
 get_dataset_source <- function(
   id = NULL,
-  key = "3LXRC"
+  key = "3LXR"
 ) {
   # https://api.checklistbank.org/dataset/308637/nameusage/DRGCD/source
   url <- paste0("https://api.checklistbank.org/dataset/", key, "/nameusage/", id, "/source")

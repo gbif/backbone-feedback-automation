@@ -35,33 +35,9 @@ wrong_group = function(xx) {
     result = name_exists(xx$name)
     if(!result$exists) return("JSON-TAG-ERROR")
     
-    # Get full details directly from cb_name_usage
-    n = cb_name_usage(xx$name)
-    
-    # If cb_name_usage didn't find it (empty result), use the ID from name_exists
-    # For wrong_group, we need classification which isn't in cb_get_taxon_by_id
-    # So we try cb_name_usage with the ID's label instead
-    if(nrow(n$usage) == 0 || is.null(n$usage$classification)) {
-        gbif_message("cb_name_usage failed, trying ID lookup for: ", xx$name, " (ID: ", result$id, ")")
-        # Get taxon details by ID
-        taxon_details = cb_get_taxon_by_id(result$id)
-        if(nrow(taxon_details) == 0) return("JSON-TAG-ERROR")
-        # Now try cb_name_usage with the exact label from the taxon
-        n = cb_name_usage(taxon_details$label[1])
-        if(nrow(n$usage) == 0 || is.null(n$usage$classification)) {
-            return("JSON-TAG-ERROR")
-        }
-    }
-    
-    # Extract parents from classification  
-    # classification$labelHtml is a list-column, take the first element
-    parents = n$usage$classification$labelHtml
+    # Get classification by traversing parent chain from the ID
+    parents = cb_get_classification_by_id(result$id)
     if(is.null(parents) || length(parents) == 0) return("JSON-TAG-ERROR")
-    if(is.list(parents)) parents = parents[[1]]
-    
-    # Strip HTML tags from parents (e.g., <i>Epidemia</i> -> Epidemia)
-    parents = strip_html(parents)
-    
     wg = xx$wrongGroup
     rg = xx$rightGroup
 
@@ -92,34 +68,31 @@ if(!rg_check) {
 
 
 if(!is.null(wg_check) & !is.null(rg_check)) {
-
-if(wg_check & !rg_check) {
-    out = "ISSUE_OPEN"
-} else if (!wg_check & rg_check) {
-    out = "ISSUE_CLOSED"
-} else {
-    out = "JSON-TAG-ERROR"
-}
-
+    # Both wrongGroup and rightGroup specified
+    # The key question: is it in the rightGroup?
+    if(rg_check) {
+        out = "ISSUE_CLOSED"  # Successfully moved to correct group
+    } else {
+        out = "ISSUE_OPEN"     # Not yet in correct group
+    }
 } 
 
-if(is.null(wg_check) & !is.null(rg_check))
-if(!rg_check) {
-    out = "ISSUE_OPEN"
-} else if (rg_check) {
-    out = "ISSUE_CLOSED"
-} else {
-    out = "JSON-TAG-ERROR"
+if(is.null(wg_check) & !is.null(rg_check)) {
+    # Only rightGroup specified
+    if(rg_check) {
+        out = "ISSUE_CLOSED"   # In the correct group
+    } else {
+        out = "ISSUE_OPEN"     # Not in the correct group
+    }
 }
 
 if(is.null(rg_check) & !is.null(wg_check)) {
-if(wg_check) {
-    out = "ISSUE_OPEN"
-} else if (!wg_check) {
-    out = "ISSUE_CLOSED"
-} else {
-    out = "JSON-TAG-ERROR"
-}
+    # Only wrongGroup specified
+    if(wg_check) {
+        out = "ISSUE_OPEN"     # Still in wrong group
+    } else {
+        out = "ISSUE_CLOSED"   # No longer in wrong group
+    }
 }
 
 return(out)

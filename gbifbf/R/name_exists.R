@@ -139,7 +139,7 @@ name_exists <- function(name, verbose = FALSE) {
   # Strategy 5: Use search endpoint (broader search that may find variants)
   gbif_message("Strategy 5: Trying search endpoint")
   tryCatch({
-    url <- "https://api.checklistbank.org/dataset/3LXRC/nameusage/search"
+    url <- "https://api.checklistbank.org/dataset/3LXR/nameusage/search"
     user <- Sys.getenv("GBIF_USER")
     pwd <- Sys.getenv("GBIF_PWD")
     

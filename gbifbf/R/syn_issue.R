@@ -38,23 +38,11 @@ syn_issue = function(xx) {
     name_result = name_exists(xx$name)
     if(!name_result$exists) return("JSON-TAG-ERROR")
     
-    # Get full details directly from cb_name_usage
-    n = cb_name_usage(xx$name)$usage
+    # Get full details by ID
+    n = cb_get_taxon_by_id(name_result$id)
+    if(nrow(n) == 0) return("JSON-TAG-ERROR")
     
-    # If cb_name_usage didn't find it (empty result), use the ID from name_exists
-    if(nrow(n) == 0 || !("status" %in% names(n))) {
-        gbif_message("Using ID lookup for: ", xx$name, " (ID: ", name_result$id, ")")
-        n = cb_get_taxon_by_id(name_result$id)
-        if(nrow(n) == 0) return("JSON-TAG-ERROR")
-    }
-    
-    current_status = n$status[n$labelHtml == xx$name]
-    if(length(current_status) == 0) {
-        # If exact match not found in labelHtml, just use the first status
-        current_status = n$status[1]
-    } else {
-        current_status = current_status[1]  # Take first if multiple
-    }
+    current_status = n$status[1]
     
     if(is.null(xx$rightStatus) & is.null(xx$wrongStatus)) {
         gbif_message("Ignoring rightStatus and wrongStatus")
