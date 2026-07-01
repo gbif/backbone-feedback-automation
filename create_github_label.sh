@@ -1,7 +1,77 @@
 
 #!/bin/bash
 
-tsv_file="report.tsv"
+# Function to update label for a single issue
+update_issue_label() {
+    local issue=$1
+    local status=$2
+    
+    echo "Processing issue #$issue with status: $status"
+    
+    case "$status" in
+        "ISSUE_CLOSED")
+            update_label="autocheck - issue closed on xRelease"
+            ;;
+        "ISSUE_OPEN")
+            update_label="autocheck - issue open on xRelease"
+            ;;
+        "JSON-TAG-ERROR")
+            update_label="autocheck - status unclear on xRelease"
+            ;;
+        *)
+            echo "Unknown status: $status"
+            return 1
+            ;;
+    esac
+    
+    echo "Target label: $update_label"
+    
+    labels=$(gh issue view "$issue" --repo gbif/backbone-feedback --json labels --jq '.labels[].name')
+    
+    current_label="" 
+    if echo "$labels" | grep -qF "autocheck - issue open on xRelease"; then
+        current_label="autocheck - issue open on xRelease"
+    elif echo "$labels" | grep -qF "autocheck - issue closed on xRelease"; then
+        current_label="autocheck - issue closed on xRelease"
+    elif echo "$labels" | grep -qF "autocheck - status unclear on xRelease"; then
+        current_label="autocheck - status unclear on xRelease"
+    fi
+    
+    echo "Current label: $current_label"
+    
+    if [ "$current_label" = "$update_label" ]; then
+        echo "No change in label required for issue #$issue"
+        return 0
+    fi
+    
+    # Remove all autocheck labels
+    gh issue edit $issue --repo gbif/backbone-feedback --remove-label 'autocheck - issue open on xRelease' 2>/dev/null || true
+    gh issue edit $issue --repo gbif/backbone-feedback --remove-label 'autocheck - issue closed on xRelease' 2>/dev/null || true
+    gh issue edit $issue --repo gbif/backbone-feedback --remove-label 'autocheck - status unclear on xRelease' 2>/dev/null || true
+    
+    # Add the new label
+    echo "Updating label to: $update_label"
+    gh issue edit $issue --repo gbif/backbone-feedback --add-label "$update_label"
+}
+
+# Check if arguments are provided for single-issue mode
+if [ $# -eq 2 ]; then
+    # Single issue mode: issue number and status provided as arguments
+    update_issue_label "$1" "$2"
+    exit 0
+fi
+
+# Batch mode: read from TSV file (backward compatibility)
+tsv_file="${1:-report.tsv}"
+
+if [ ! -f "$tsv_file" ]; then
+    echo "Error: TSV file not found: $tsv_file"
+    echo "Usage: $0 [issue_number status] OR $0 [tsv_file]"
+    exit 1
+fi
+
+echo "Running in batch mode with TSV file: $tsv_file"
+
 header_skipped=true
 while IFS=$'\t' read -r issue status type; do
     if [ "$header_skipped" = true ]; then
@@ -11,60 +81,11 @@ while IFS=$'\t' read -r issue status type; do
  
     status=${status//\"/}  # Unquote the status variable
     issue=${issue//\"/}  # Unquote the issue variable
- 
-    echo "issue num from tsv: $issue"
-    echo "issue status from tsv: $status"
-
-    if [ "$status" = "ISSUE_CLOSED" ]; then
-    update_label="autocheck - issue closed on xRelease"
-    fi
-    if [ "$status" = "ISSUE_OPEN" ]; then
-    update_label="autocheck - issue open on xRelease"
-    fi
-    if [ "$status" = "JSON-TAG-ERROR" ]; then
-    update_label="autocheck - status unclear on xRelease"
-    fi
-
-    echo "Update label: $update_label"
-
-    labels=$(gh issue view "$issue" --json labels --jq '.labels[].name')
     
-    current_label="" 
-    if [ -z "$current_label" ]; then
-    current_label=$(echo "$labels" | grep -qF "autocheck - issue open on xRelease" && echo "autocheck - issue open on xRelease" || echo "")
-    fi 
-    if [ -z "$current_label" ]; then
-    current_label=$(echo "$labels" | grep -qF "autocheck - issue closed on xRelease" && echo "autocheck - issue closed on xRelease" || echo "")
-    fi 
-    if [ -z "$current_label" ]; then
-    current_label=$(echo "$labels" | grep -qF "autocheck - status unclear on xRelease" && echo "autocheck - status unclear on xRelease" || echo "")
-    fi 
-    echo "Current label: $current_label"
-
-    if [ "$current_label" = "$update_label" ]; then
-    echo "No change in label required for issue #$issue"
-    continue
-    fi
-
-    # if the label needs to changed 
-    gh issue edit $issue --remove-label 'autocheck - issue open on xRelease'
-    gh issue edit $issue --remove-label 'autocheck - issue closed on xRelease'
-    gh issue edit $issue --remove-label 'autocheck - status unclear on xRelease'
-    
-    if [ "$status" = "ISSUE_CLOSED" ]; then
-        echo "updating label to: autocheck - issue closed on xRelease"   
-        gh issue edit $issue --add-label 'autocheck - issue closed on xRelease'
-    fi
-    if [ "$status" = "ISSUE_OPEN" ]; then
-        echo "updating label to: autocheck - issue open on xRelease"
-        gh issue edit $issue --add-label 'autocheck - issue open on xRelease'
-    fi
-    if [ "$status" = "JSON-TAG-ERROR" ]; then
-        echo "updating label to: autocheck - status unclear on xRelease"
-        gh issue edit $issue --add-label 'autocheck - status unclear on xRelease'
-    fi
+    update_issue_label "$issue" "$status"
 
 done < "$tsv_file"
+
 
 
 

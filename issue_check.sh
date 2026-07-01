@@ -11,12 +11,22 @@ Rscript -e 'install.packages("./gbifbf", repos = NULL, type = "source")'
 # Parse command-line options
 ISSUE_STATE="open"
 REPORT_FILE="report.tsv"
+ENABLE_REPORT=""
+SKIP_LABEL=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --closed)
             ISSUE_STATE="closed"
             REPORT_FILE="report-closed.tsv"
+            shift
+            ;;
+        --report)
+            ENABLE_REPORT="--report"
+            shift
+            ;;
+        --no-label)
+            SKIP_LABEL="true"
             shift
             ;;
         [0-9]*)
@@ -26,7 +36,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--closed] [issue_number]"
+            echo "Usage: $0 [--closed] [--report] [--no-label] [issue_number]"
             exit 1
             ;;
     esac
@@ -39,7 +49,7 @@ if [ -n "$SINGLE_ISSUE" ]; then
 else
     # Fetch issues based on state
     echo "Fetching all $ISSUE_STATE issues from project..."
-    issues=$(gh issue list --search "is:issue is:$ISSUE_STATE project:gbif/23" --json number --jq '.[].number' --limit 500)
+    issues=$(gh issue list --repo gbif/backbone-feedback --search "is:issue is:$ISSUE_STATE project:gbif/23" --json number --jq '.[].number' --limit 500)
     echo $issues
     
     for issue in $issues; do
@@ -69,7 +79,19 @@ do
     COMMENT_BODY=$(echo "$JSON" | jq '.body')
     echo $COMMENT_BODY
     if [ "$COMMENT_BODY" != "null" ] && [ -n "$COMMENT_BODY" ]; then
-        Rscript process_json.R "$COMMENT_BODY" "$issue" "$REPORT_FILE"
+        # Run process_json.R and capture output (format: issue|status|type)
+        OUTPUT=$(Rscript process_json.R "$COMMENT_BODY" "$issue" "$REPORT_FILE" $ENABLE_REPORT)
+        echo "Process output: $OUTPUT"
+        
+        # Parse output
+        IFS='|' read -r issue_num status type <<< "$OUTPUT"
+        
+        # Immediately update GitHub label for this issue (unless --no-label flag is set)
+        if [ -n "$status" ] && [ -z "$SKIP_LABEL" ]; then
+            ./create_github_label.sh "$issue_num" "$status"
+        elif [ -n "$SKIP_LABEL" ]; then
+            echo "Skipping label update (--no-label flag set)"
+        fi
     else
         echo "No processable JSON comments found for issue $issue (may have unchecked checkbox)"
     fi

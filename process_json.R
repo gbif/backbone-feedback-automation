@@ -11,6 +11,7 @@ args <- commandArgs(trailingOnly = TRUE)
 original_string <- args[1]
 issue = args[2]
 report_file = ifelse(length(args) >= 3, args[3], "report.tsv")
+enable_report = ifelse(length(args) >= 4 && args[4] == "--report", TRUE, FALSE)
 
 # Check if original_string is a file path and read it if so
 if (file.exists(original_string)) {
@@ -57,7 +58,6 @@ list_depth <- function(this) ifelse(is.list(this), 1L + max(sapply(this, list_de
 
 fun_picker = function(xx) {
 names = names(xx)
-print(names)
 
 if("missingName" %in% names) {
    issue_status = missing_name(xx)
@@ -113,9 +113,12 @@ ff = list(issue_status = "ISSUE_OPEN", issue_type = "EMPTY")
 
 df = data.frame(issue = issue, issue_status = ff$issue_status, issue_type = ff$issue_type)
 
+# Output parseable format: issue|status|type
+cat(paste(issue, ff$issue_status, ff$issue_type, sep = "|"), "\n")
 
-cat(ff$issue_status, "\n")
-
-write.table(df, file = report_file, append = TRUE, row.names = FALSE, col.names = !file.exists(report_file), sep = "\t")
+# Only write report if --report flag was provided
+if(enable_report) {
+  write.table(df, file = report_file, append = TRUE, row.names = FALSE, col.names = !file.exists(report_file), sep = "\t")
+}
 
 quit(status = 0)
