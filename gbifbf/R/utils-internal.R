@@ -60,16 +60,9 @@ cb_get_taxon_by_id <- function(id, key = "3LXR") {
 exists_only_3LXRC <- function(id) {
   # First check if it exists in 3LXR
   usage_3lxr <- cb_get_taxon_by_id(id, key = "3LXR")
+  exists_3lxr <- nrow(usage_3lxr) > 0 && "id" %in% names(usage_3lxr) && !is.na(usage_3lxr$id[1])
   
-  # If found in 3LXR (non-empty tibble with valid id), return FALSE with empty usage
-  if(nrow(usage_3lxr) > 0 && "id" %in% names(usage_3lxr) && !is.na(usage_3lxr$id[1])) {
-    return(list(
-      exists = FALSE,
-      usage = tibble::tibble()
-    ))
-  }
-  
-  # Not in 3LXR, so check 3LXRC
+  # Check 3LXRC
   url <- paste0("https://api.checklistbank.org/dataset/3LXRC/nameusage/", id)
   
   user <- Sys.getenv("GBIF_USER")
@@ -81,8 +74,12 @@ exists_only_3LXRC <- function(id) {
     jsonlite::fromJSON(flatten = TRUE)
   
   # Extract usage information if found in 3LXRC
+  usage_3lxrc <- tibble::tibble()
+  exists_3lxrc <- FALSE
+  
   if(!is.null(result) && !is.null(result$id)) {
-    usage <- tibble::tibble(
+    exists_3lxrc <- TRUE
+    usage_3lxrc <- tibble::tibble(
       id = result$id,
       status = result$status,
       labelHtml = strip_html(result$labelHtml),
@@ -92,16 +89,14 @@ exists_only_3LXRC <- function(id) {
       name = result$name$scientificName %||% NA_character_,
       authorship = result$name$authorship %||% NA_character_
     )
-    return(list(
-      exists = TRUE,
-      usage = usage
-    ))
   }
   
-  # Not found in either dataset
+  # Return list with 4 slots
   return(list(
-    exists = FALSE,
-    usage = tibble::tibble()
+    exists_3LXRC = exists_3lxrc,
+    exists_only_3LXRC = exists_3lxrc && !exists_3lxr,
+    exists_3LXR = exists_3lxr,
+    usage_3LXRC = usage_3lxrc
   ))
 }
 
