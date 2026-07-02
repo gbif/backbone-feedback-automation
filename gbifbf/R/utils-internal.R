@@ -56,6 +56,55 @@ cb_get_taxon_by_id <- function(id, key = "3LXR") {
   return(tibble::tibble())
 }
 
+# Check if taxon exists only in 3LXRC (not in 3LXR)
+exists_only_3LXRC <- function(id) {
+  # First check if it exists in 3LXR
+  usage_3lxr <- cb_get_taxon_by_id(id, key = "3LXR")
+  
+  # If found in 3LXR (non-empty tibble with valid id), return FALSE with empty usage
+  if(nrow(usage_3lxr) > 0 && "id" %in% names(usage_3lxr) && !is.na(usage_3lxr$id[1])) {
+    return(list(
+      exists = FALSE,
+      usage = tibble::tibble()
+    ))
+  }
+  
+  # Not in 3LXR, so check 3LXRC
+  url <- paste0("https://api.checklistbank.org/dataset/3LXRC/nameusage/", id)
+  
+  user <- Sys.getenv("GBIF_USER")
+  pwd <- Sys.getenv("GBIF_PWD")
+  
+  result <- httr::GET(url,
+                      httr::authenticate(user, pwd)) |>
+    httr::content(as = "text", encoding = "UTF-8") |>
+    jsonlite::fromJSON(flatten = TRUE)
+  
+  # Extract usage information if found in 3LXRC
+  if(!is.null(result) && !is.null(result$id)) {
+    usage <- tibble::tibble(
+      id = result$id,
+      status = result$status,
+      labelHtml = strip_html(result$labelHtml),
+      label = result$label,
+      parentId = result$parentId %||% NA_character_,
+      rank = result$name$rank %||% NA_character_,
+      name = result$name$scientificName %||% NA_character_,
+      authorship = result$name$authorship %||% NA_character_
+    )
+    return(list(
+      exists = TRUE,
+      usage = usage
+    ))
+  }
+  
+  # Not found in either dataset
+  return(list(
+    exists = FALSE,
+    usage = tibble::tibble()
+  ))
+}
+
 # Build classification by traversing parent chain
 cb_get_classification_by_id <- function(id, key = "3LXR") {
   classification <- character()
