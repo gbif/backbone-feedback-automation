@@ -24,6 +24,29 @@ strip_html <- function(html_text) {
   gsub("<[^>]+>", "", html_text)
 }
 
+# Query ChecklistBank suggest endpoint
+cb_name_suggest <- function(q, key = "3LXR", limit = 20) {
+  # https://api.checklistbank.org/dataset/3LXR/nameusage/suggest?q=Mallomonas%20Perty,%201852
+  url <- paste0("https://api.checklistbank.org/dataset/", key, "/nameusage/suggest")
+  
+  user <- Sys.getenv("GBIF_USER")
+  pwd <- Sys.getenv("GBIF_PWD")
+  
+  result <- httr::GET(url,
+                      httr::authenticate(user, pwd),
+                      query = list(q = q, limit = limit)) |>
+    httr::content(as = "text", encoding = "UTF-8") |>
+    jsonlite::fromJSON(flatten = TRUE)
+  
+  # Return as tibble if we got results
+  if(!is.null(result) && length(result) > 0) {
+    return(tibble::as_tibble(result))
+  }
+  
+  # Return empty tibble if no results
+  return(tibble::tibble())
+}
+
 # Get taxon details by ID
 cb_get_taxon_by_id <- function(id, key = "3LXR") {
   # https://api.checklistbank.org/dataset/3LXR/nameusage/8HRN9

@@ -8,6 +8,11 @@ wrong_rank = function(xx) {
     result = name_exists(xx$name)
     if(!result$exists) return("JSON-TAG-ERROR")
     
+    if(result$multiple) {
+        gbif_message("WARNING: Multiple matches found for '", xx$name, "'. IDs: ", paste(result$ids, collapse = ", "))
+        gbif_message("Using first match (ID: ", result$id, ")")
+    }
+    
     # Get full details directly from cb_name_usage
     n = cb_name_usage(xx$name)$usage
     

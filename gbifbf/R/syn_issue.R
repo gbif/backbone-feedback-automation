@@ -38,13 +38,120 @@ syn_issue = function(xx) {
     name_result = name_exists(xx$name)
     if(!name_result$exists) return("JSON-TAG-ERROR")
     
+    # Handle multiple matches - check all IDs conservatively
+    if(name_result$multiple) {
+        gbif_message("Multiple matches found for name '", xx$name, "'. Checking all IDs: ", paste(name_result$ids, collapse = ", "))
+        
+        # Helper function to check a single ID
+        check_single_id <- function(id, name_for_msg) {
+            n = cb_get_taxon_by_id(id)
+            if(nrow(n) == 0) return("JSON-TAG-ERROR")
+            
+            current_status = n$status[1]
+            
+            # check right parent 
+            if(!is.null(xx$rightParent)) {
+                rp_result = name_exists(xx$rightParent)
+                if(!rp_result$exists) {
+                    gbif_message("rightParent not found in backbone")
+                    return("JSON-TAG-ERROR")
+                }
+                # Check if xx$name is in the synonyms of rightParent
+                rp = xx$name %in% get_syns(rp_result$id)
+            } else {
+                rp = NULL
+            }
+
+            # check wrong parent 
+            if(!is.null(xx$wrongParent)) {
+                wp_result = name_exists(xx$wrongParent)
+                if(!wp_result$exists) {
+                    gbif_message("wrongParent not found in backbone - treating as FALSE (issue may be fixed)")
+                    wp = FALSE
+                } else {
+                    # Check if xx$name is in the synonyms of wrongParent
+                    wp = xx$name %in% get_syns(wp_result$id)
+                }
+            } else {
+                wp = NULL
+            }
+            if(!is.null(xx$wrongStatus)) {
+                ws = current_status == tolower(xx$wrongStatus)
+            } else {
+                ws = NULL
+            }
+            if(!is.null(xx$rightStatus)) {
+                rs = current_status == tolower(xx$rightStatus)
+            } else {
+                rs = NULL
+            }
+            
+            # get right status 
+            if(is.null(rs) && is.null(ws)) {
+                rrs = NULL
+            }
+            if(is.null(rs) && !is.null(wp)) {
+                rrs = ifelse(!wp, TRUE, FALSE)
+            }
+            if(!is.null(rs) && is.null(ws)) {
+                rrs = ifelse(rs, TRUE, FALSE)
+            } 
+            if(!is.null(rs) && !is.null(ws)) {
+                rrs = ifelse(rs && !ws, TRUE, FALSE)
+            }
+
+            if(is.null(rp) && is.null(wp)) {
+                rrp = NULL
+            }
+            # get right parent
+            if(is.null(rp) && !is.null(wp)) {
+                rrp = ifelse(!wp, TRUE, FALSE)
+            }
+            if(!is.null(rp) && is.null(wp)) {
+                rrp = ifelse(rp, TRUE, FALSE)
+            }
+            if(!is.null(rp) && !is.null(wp)) {
+                rrp = ifelse(rp && !wp, TRUE, FALSE)
+            }
+
+            # issue open or closed logic 
+            if(is.null(rrp)) {
+                out = ifelse(rrs, "ISSUE_CLOSED", "ISSUE_OPEN")    
+            }
+            if(!is.null(rrp) && !is.null(rrs)) {
+              out = ifelse(rrs && rrp, "ISSUE_CLOSED", "ISSUE_OPEN")
+            } 
+            if(!is.null(rrp) && is.null(rrs)) {
+                out = ifelse(rrp, "ISSUE_CLOSED", "ISSUE_OPEN")
+            }
+            return(out)
+        }
+        
+        # Check all matching IDs - conservative: if ANY is OPEN, return OPEN
+        statuses <- sapply(name_result$ids, check_single_id)
+        valid_statuses <- statuses[statuses %in% c("ISSUE_OPEN", "ISSUE_CLOSED")]
+        
+        if(length(valid_statuses) == 0) {
+            return("JSON-TAG-ERROR")
+        }
+        
+        # Conservative: if ANY has ISSUE_OPEN, return ISSUE_OPEN
+        if("ISSUE_OPEN" %in% valid_statuses) {
+            gbif_message("At least one matching ID has ISSUE_OPEN - issue remains open")
+            return("ISSUE_OPEN")
+        }
+        
+        return("ISSUE_CLOSED")
+    }
+    
+    # Single match - original logic
     # Get full details by ID
     n = cb_get_taxon_by_id(name_result$id)
     if(nrow(n) == 0) return("JSON-TAG-ERROR")
     
     current_status = n$status[1]
     
-    if(is.null(xx$rightStatus) & is.null(xx$wrongStatus)) {
+    if(is.null(xx$rightStatus) && is.null(xx$wrongStatus)) {
         gbif_message("Ignoring rightStatus and wrongStatus")
     }
     
@@ -91,33 +198,33 @@ syn_issue = function(xx) {
     # cat("right parent: ",rp,"\n")
     
     # get right status 
-    if(is.null(rs) & is.null(ws)) {
+    if(is.null(rs) && is.null(ws)) {
         rrs = NULL
     }
-    if(is.null(rs) & !is.null(wp)) {
+    if(is.null(rs) && !is.null(wp)) {
         rrs = ifelse(!wp, TRUE, FALSE)
     }
-    if(!is.null(rs) & is.null(ws)) {
+    if(!is.null(rs) && is.null(ws)) {
         rrs = ifelse(rs, TRUE, FALSE)
     } 
-    if(!is.null(rs) & !is.null(ws)) {
-        rrs = ifelse(rs & !ws, TRUE, FALSE)
+    if(!is.null(rs) && !is.null(ws)) {
+        rrs = ifelse(rs && !ws, TRUE, FALSE)
     }
     
     # if(!is.null(rrs)) cat("right right status: ",rrs,"\n")
 
-    if(is.null(rp) & is.null(wp)) {
+    if(is.null(rp) && is.null(wp)) {
         rrp = NULL
     }
     # get right parent
-    if(is.null(rp) & !is.null(wp)) {
+    if(is.null(rp) && !is.null(wp)) {
         rrp = ifelse(!wp, TRUE, FALSE)
     }
-    if(!is.null(rp) & is.null(wp)) {
+    if(!is.null(rp) && is.null(wp)) {
         rrp = ifelse(rp, TRUE, FALSE)
     }
-    if(!is.null(rp) & !is.null(wp)) {
-        rrp = ifelse(rp & !wp, TRUE, FALSE)
+    if(!is.null(rp) && !is.null(wp)) {
+        rrp = ifelse(rp && !wp, TRUE, FALSE)
     }
 
     # cat("right right parent: ",rrp,"\n")
@@ -126,10 +233,10 @@ syn_issue = function(xx) {
     if(is.null(rrp)) {
         out = ifelse(rrs, "ISSUE_CLOSED", "ISSUE_OPEN")    
     }
-    if(!is.null(rrp) & !is.null(rrs)) {
-      out = ifelse(rrs & rrp, "ISSUE_CLOSED", "ISSUE_OPEN")
+    if(!is.null(rrp) && !is.null(rrs)) {
+      out = ifelse(rrs && rrp, "ISSUE_CLOSED", "ISSUE_OPEN")
     } 
-    if(!is.null(rrp) & is.null(rrs)) {
+    if(!is.null(rrp) && is.null(rrs)) {
         out = ifelse(rrp, "ISSUE_CLOSED", "ISSUE_OPEN")
     }
     return(out)

@@ -45,6 +45,13 @@ name_change = function(xx) {
     cn_result = name_exists(xx$currentName)
     pn_result = name_exists(xx$proposedName)
     
+    if(cn_result$multiple) {
+        gbif_message("Multiple matches found for currentName '", xx$currentName, "'. Checking all IDs: ", paste(cn_result$ids, collapse = ", "))
+    }
+    if(pn_result$multiple) {
+        gbif_message("Multiple matches found for proposedName '", xx$proposedName, "'. Checking all IDs: ", paste(pn_result$ids, collapse = ", "))
+    }
+    
     cn_exists = cn_result$exists
     pn_exists = pn_result$exists
     
@@ -63,15 +70,35 @@ name_change = function(xx) {
         return("ISSUE_OPEN")
     }
     
-    # CASE 4: Both names exist - check if they're synonyms
+    # CASE 4: Both names exist - check all ID combinations
     if(cn_exists && pn_exists) {
-        # Get synonyms of the proposedName (accepted name)
-        syns = get_syns(pn_result$id)
-        # If currentName is listed as a synonym of proposedName, issue is closed
-        if(xx$currentName %in% syns) {
+        # Helper function to check a single ID pair
+        check_synonym_relationship <- function(cn_id, pn_id) {
+            # Get synonyms of the proposedName (accepted name)
+            syns = get_syns(pn_id)
+            # Check if currentName is listed as a synonym of proposedName
+            return(xx$currentName %in% syns)
+        }
+        
+        # Check all combinations of current and proposed name IDs
+        # Conservative: issue is CLOSED only if ALL currentName IDs are synonyms of at least one proposedName ID
+        all_closed = TRUE
+        for(cn_id in cn_result$ids) {
+            # Check if this currentName ID is a synonym of ANY proposedName ID
+            is_syn_of_any = any(sapply(pn_result$ids, function(pn_id) {
+                check_synonym_relationship(cn_id, pn_id)
+            }))
+            
+            if(!is_syn_of_any) {
+                gbif_message("currentName ID ", cn_id, " is not a synonym of any proposedName ID")
+                all_closed = FALSE
+                break
+            }
+        }
+        
+        if(all_closed) {
             return("ISSUE_CLOSED")
         } else {
-            # Both exist but not synonyms - issue still open
             return("ISSUE_OPEN")
         }
     }
