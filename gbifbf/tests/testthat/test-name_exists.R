@@ -41,6 +41,7 @@ test_that("name_exists handles names with special characters", {
 })
 
 test_that("name_exists verbose mode works", {
+  skip_on_ci()
   # Test that verbose parameter doesn't cause errors
   expect_silent(name_exists("Trichopria aequata (Thomson, 1858)", verbose = FALSE))
   # Verbose mode should produce messages

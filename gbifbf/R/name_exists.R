@@ -65,10 +65,13 @@ name_exists <- function(name, verbose = FALSE) {
     on.exit(options(gbifbf.verbose = original_verbose))
   }
   
+  gbif_message("Searching for name: ", name)
+  
   # Collect all matching IDs from different strategies
   all_ids <- character(0)
   
   # Strategy 1: Direct lookup
+  gbif_message("Strategy 1: Direct lookup")
   n <- cb_name_usage(name)
   
   # Check primary results for exact match
@@ -77,19 +80,23 @@ name_exists <- function(name, verbose = FALSE) {
     if(length(match_idx) > 0) {
       strategy1_ids <- unique(n$usage$id[match_idx])
       all_ids <- c(all_ids, strategy1_ids)
+      gbif_message("  Found ", length(strategy1_ids), " match(es) in primary results")
     }
   }
   
   # Strategy 2: Check alternatives
+  gbif_message("Strategy 2: Check alternatives")
   if(nrow(n$alternatives) > 0) {
     match_idx <- which(n$alternatives$labelHtml == name)
     if(length(match_idx) > 0) {
       strategy2_ids <- unique(n$alternatives$id[match_idx])
       all_ids <- c(all_ids, strategy2_ids)
+      gbif_message("  Found ", length(strategy2_ids), " match(es) in alternatives")
     }
   }
   
   # Strategy 3: Parse to base name and search
+  gbif_message("Strategy 3: Base name parsing")
   parsed <- cb_name_parser(q = name)
   base_name <- parsed$scientificName
   
@@ -206,9 +213,11 @@ name_exists <- function(name, verbose = FALSE) {
   
   if(length(all_ids) == 0) {
     # Name not found
+    gbif_message("Result: Name not found")
     return(list(exists = FALSE, id = NA_character_, ids = NA_character_, multiple = FALSE))
   } else if(length(all_ids) == 1) {
     # Single match found
+    gbif_message("Result: Single match found with ID: ", all_ids[1])
     return(list(exists = TRUE, id = all_ids[1], ids = all_ids, multiple = FALSE))
   } else {
     # Multiple matches found - keep this warning as it's important
