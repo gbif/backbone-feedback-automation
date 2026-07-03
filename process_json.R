@@ -12,6 +12,7 @@ original_string <- args[1]
 issue = args[2]
 report_file = ifelse(length(args) >= 3, args[3], "report.tsv")
 enable_report = ifelse(length(args) >= 4 && args[4] == "--report", TRUE, FALSE)
+show_reports = ifelse("--verbose" %in% args, TRUE, FALSE)
 
 # Check if original_string is a file path and read it if so
 if (file.exists(original_string)) {
@@ -61,6 +62,7 @@ names = names(xx)
 
 if("missingName" %in% names) {
    issue_status = missing_name(xx)
+   if(show_reports) missing_name_report(xx)
    issue_type = "missingName"
 } 
 if("badName" %in% names) {
@@ -69,22 +71,22 @@ if("badName" %in% names) {
 } 
 if("currentName" %in% names) {
    issue_status = name_change(xx)
-   name_change_report(xx)
+   if(show_reports) name_change_report(xx)
    issue_type = "nameChange"
 } 
 if("wrongGroup" %in% names) {
    issue_status = wrong_group(xx)
-   wrong_group_report(xx)
+   if(show_reports) wrong_group_report(xx)
    issue_type = "wrongGroup"
 } 
 if("wrongRank" %in% names) {
    issue_status = wrong_rank(xx)
-   wrong_rank_report(xx)
+   if(show_reports) wrong_rank_report(xx)
    issue_type = "wrongRank"
 }
 if("wrongStatus" %in% names) {
    issue_status = syn_issue(xx)
-   syn_issue_report(xx)
+   if(show_reports) syn_issue_report(xx)
    issue_type = "wrongStatus"
 }
 if(is.null(issue_status)) { issue_status = "JSON-TAG-ERROR" }

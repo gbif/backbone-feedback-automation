@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 report.tsv
 report-closed.tsv
+log.txt
+*.log

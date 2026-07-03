@@ -44,7 +44,27 @@ Main orchestrator that fetches GitHub issues and processes them.
 
 # Process single closed issue
 ./issue_check.sh --closed 456
+
+# Save output to a log file
+./issue_check.sh --log output.log
+
+# Use default log file (log.txt)
+./issue_check.sh --log
+
+# Show detailed validation reports (verbose mode)
+./issue_check.sh --verbose
+
+# Combine options: process open issues with report and logging
+./issue_check.sh --report --log check-$(date +%Y%m%d).log
 ```
+
+**Options:**
+- `--closed`: Process closed issues instead of open ones
+- `--report`: Generate a TSV report file (report.tsv or report-closed.tsv)
+- `--no-label`: Run in dry-run mode without updating GitHub labels
+- `--verbose`: Show detailed validation reports for each issue (by default, reports are silenced)
+- `--log [FILE]` or `--logfile [FILE]`: Save all output to a log file (also displayed on console). Defaults to log.txt if no filename provided.
+- `[issue_number]`: Process a single issue by number instead of all issues
 
 **Statuses:**
 - `ISSUE_OPEN`: Issue is still open in ChecklistBank

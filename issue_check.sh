@@ -4,15 +4,13 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Install the latest version of gbifbf package from source
-echo "Installing gbifbf package from source..."
-Rscript -e 'install.packages("./gbifbf", repos = NULL, type = "source")'
-
 # Parse command-line options
 ISSUE_STATE="open"
 REPORT_FILE="report.tsv"
 ENABLE_REPORT=""
 SKIP_LABEL=""
+LOG_FILE=""
+VERBOSE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -29,6 +27,21 @@ while [[ $# -gt 0 ]]; do
             SKIP_LABEL="true"
             shift
             ;;
+        --verbose)
+            VERBOSE="--verbose"
+            shift
+            ;;
+        --log|--logfile)
+            # If next argument exists and doesn't start with --, use it as filename
+            if [ -n "$2" ] && [[ ! "$2" =~ ^-- ]] && [[ ! "$2" =~ ^[0-9]+$ ]]; then
+                LOG_FILE="$2"
+                shift 2
+            else
+                # Default to log.txt if no filename provided
+                LOG_FILE="log.txt"
+                shift
+            fi
+            ;;
         [0-9]*)
             # Numeric argument is an issue number
             SINGLE_ISSUE="$1"
@@ -36,21 +49,43 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--closed] [--report] [--no-label] [issue_number]"
+            echo "Usage: $0 [--closed] [--report] [--no-label] [--verbose] [--log [FILE]] [issue_number]"
             exit 1
             ;;
     esac
 done
 
+# Initialize log file if specified
+if [ -n "$LOG_FILE" ]; then
+    echo "Logging output to: $LOG_FILE"
+    echo "========================================" > "$LOG_FILE"
+    echo "Issue Check Log - $(date)" >> "$LOG_FILE"
+    echo "========================================" >> "$LOG_FILE"
+    echo "" >> "$LOG_FILE"
+    # Define a function to log messages to both console and file
+    log() {
+        echo "$@" | tee -a "$LOG_FILE"
+    }
+else
+    # If no log file, just use regular echo
+    log() {
+        echo "$@"
+    }
+fi
+
+# Install the latest version of gbifbf package from source
+log "Installing gbifbf package from source..."
+Rscript -e 'install.packages("./gbifbf", repos = NULL, type = "source")'
+
 # Check if issue number is provided as command-line argument
 if [ -n "$SINGLE_ISSUE" ]; then
-    echo "Processing single issue: $SINGLE_ISSUE"
+    log "Processing single issue: $SINGLE_ISSUE"
     issue_array=("$SINGLE_ISSUE")
 else
     # Fetch issues based on state
-    echo "Fetching all $ISSUE_STATE issues from project..."
+    log "Fetching all $ISSUE_STATE issues from project..."
     issues=$(gh issue list --repo gbif/backbone-feedback --search "is:issue is:$ISSUE_STATE project:gbif/23" --json number --jq '.[].number' --limit 500)
-    echo $issues
+    log $issues
     
     for issue in $issues; do
         issue_array+=("$issue")
@@ -59,16 +94,16 @@ fi
 
 for issue in "${issue_array[@]}"
 do
-    echo "Processing issue: $issue"
+    log "Processing issue: $issue"
     COMMENTS=$(curl -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/gbif/backbone-feedback/issues/$issue/comments)
     # echo $COMMENTS
     if [ -z "$COMMENTS" ]; then
-        echo "Error: No comments received for issue $issue"
+        log "Error: No comments received for issue $issue"
         continue
     fi
 
     if ! echo "$COMMENTS" | jq empty; then
-        echo "Error: Invalid JSON received for issue $issue"
+        log "Error: Invalid JSON received for issue $issue"
         continue
     fi
     
@@ -80,8 +115,8 @@ do
     # echo $COMMENT_BODY
     if [ "$COMMENT_BODY" != "null" ] && [ -n "$COMMENT_BODY" ]; then
         # Run process_json.R and capture output (format: issue|status|type)
-        OUTPUT=$(Rscript process_json.R "$COMMENT_BODY" "$issue" "$REPORT_FILE" $ENABLE_REPORT)
-        echo "Process output: $OUTPUT"
+        OUTPUT=$(Rscript process_json.R "$COMMENT_BODY" "$issue" "$REPORT_FILE" $ENABLE_REPORT $VERBOSE)
+        log "Process output: $OUTPUT"
         
         # Parse output
         IFS='|' read -r issue_num status type <<< "$OUTPUT"
@@ -90,12 +125,20 @@ do
         if [ -n "$status" ] && [ -z "$SKIP_LABEL" ]; then
             ./create_github_label.sh "$issue_num" "$status"
         elif [ -n "$SKIP_LABEL" ]; then
-            echo "Skipping label update (--no-label flag set)"
+            log "Skipping label update (--no-label flag set)"
         fi
     else
-        echo "No processable JSON comments found for issue $issue (may have unchecked checkbox)"
+        log "No processable JSON comments found for issue $issue (may have unchecked checkbox)"
     fi
 done
+
+# Final log message if logging enabled
+if [ -n "$LOG_FILE" ]; then
+    log ""
+    log "========================================"
+    log "Completed at $(date)"
+    log "========================================"
+fi
 
 
 
