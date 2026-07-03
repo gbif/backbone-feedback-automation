@@ -69,18 +69,22 @@ if("badName" %in% names) {
 } 
 if("currentName" %in% names) {
    issue_status = name_change(xx)
+   name_change_report(xx)
    issue_type = "nameChange"
 } 
 if("wrongGroup" %in% names) {
    issue_status = wrong_group(xx)
+   wrong_group_report(xx)
    issue_type = "wrongGroup"
 } 
 if("wrongRank" %in% names) {
    issue_status = wrong_rank(xx)
+   wrong_rank_report(xx)
    issue_type = "wrongRank"
 }
 if("wrongStatus" %in% names) {
    issue_status = syn_issue(xx)
+   syn_issue_report(xx)
    issue_type = "wrongStatus"
 }
 if(is.null(issue_status)) { issue_status = "JSON-TAG-ERROR" }

@@ -61,7 +61,7 @@ for issue in "${issue_array[@]}"
 do
     echo "Processing issue: $issue"
     COMMENTS=$(curl -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/gbif/backbone-feedback/issues/$issue/comments)
-    echo $COMMENTS
+    # echo $COMMENTS
     if [ -z "$COMMENTS" ]; then
         echo "Error: No comments received for issue $issue"
         continue
@@ -77,7 +77,7 @@ do
     # Process if: (1) checkbox is checked, OR (2) no checkbox exists (legacy comments)
     JSON=$(echo "$COMMENTS" | jq '.[] | select(.body | contains("// json for auto-checking") and (contains("- [ ] **Accept AI suggestion**") | not)) | {body}')
     COMMENT_BODY=$(echo "$JSON" | jq '.body')
-    echo $COMMENT_BODY
+    # echo $COMMENT_BODY
     if [ "$COMMENT_BODY" != "null" ] && [ -n "$COMMENT_BODY" ]; then
         # Run process_json.R and capture output (format: issue|status|type)
         OUTPUT=$(Rscript process_json.R "$COMMENT_BODY" "$issue" "$REPORT_FILE" $ENABLE_REPORT)

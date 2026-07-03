@@ -10,8 +10,22 @@ wrong_rank(xx)
 \item{xx}{A list containing name, wrongRank, and/or rightRank}
 }
 \value{
-A character string indicating the issue status
+A character string indicating the issue status: "ISSUE_CLOSED" if the
+  taxon has the correct rank, "ISSUE_OPEN" if it still has the wrong rank,
+  or "JSON-TAG-ERROR" if validation fails
 }
 \description{
-Check if a taxon has the wrong rank
+Internal function to verify whether a taxon has the correct taxonomic rank
+in the COL Backbone. Checks if the taxon has moved from wrongRank to rightRank.
 }
+\details{
+This function handles multiple matching taxa when the same name exists across
+different nomenclatural codes (homonyms). When multiple matches exist:
+\itemize{
+  \item All matching IDs are checked for rank consistency
+  \item Conservative approach: issue is only marked ISSUE_CLOSED when ALL matches
+        have the correct rank
+  \item If ANY match still has ISSUE_OPEN, the overall status is ISSUE_OPEN
+}
+}
+\keyword{internal}

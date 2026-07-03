@@ -146,7 +146,7 @@ cb_get_classification_by_id <- function(id, key = "3LXR") {
     
     if(!is.null(parent) && !is.null(parent$label)) {
       classification <- c(classification, parent$label)
-      gbif_message("Added parent: ", parent$label)
+      # gbif_message("Added parent: ", parent$label)
       current_id <- parent$parentId
     } else {
       break
