@@ -11,6 +11,7 @@ ENABLE_REPORT=""
 SKIP_LABEL=""
 LOG_FILE=""
 VERBOSE=""
+REPORT_COMMENT=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -31,6 +32,10 @@ while [[ $# -gt 0 ]]; do
             VERBOSE="--verbose"
             shift
             ;;
+        --report-comment)
+            REPORT_COMMENT="true"
+            shift
+            ;;
         --log|--logfile)
             # If next argument exists and doesn't start with --, use it as filename
             if [ -n "$2" ] && [[ ! "$2" =~ ^-- ]] && [[ ! "$2" =~ ^[0-9]+$ ]]; then
@@ -49,7 +54,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--closed] [--report] [--no-label] [--verbose] [--log [FILE]] [issue_number]"
+            echo "Usage: $0 [--closed] [--report] [--no-label] [--verbose] [--report-comment] [--log [FILE]] [issue_number]"
             exit 1
             ;;
     esac
@@ -110,7 +115,8 @@ do
     # Process comments with "// json for auto-checking" UNLESS they have an unchecked checkbox
     # Skip ONLY if checkbox is explicitly unchecked: "- [ ] **Accept AI suggestion**"
     # Process if: (1) checkbox is checked, OR (2) no checkbox exists (legacy comments)
-    JSON=$(echo "$COMMENTS" | jq '.[] | select(.body | contains("// json for auto-checking") and (contains("- [ ] **Accept AI suggestion**") | not)) | {body}')
+    JSON=$(echo "$COMMENTS" | jq '.[] | select(.body | contains("// json for auto-checking") and (contains("- [ ] **Accept AI suggestion**") | not)) | {id, body}')
+    COMMENT_ID=$(echo "$JSON" | jq '.id')
     COMMENT_BODY=$(echo "$JSON" | jq '.body')
     # echo $COMMENT_BODY
     if [ "$COMMENT_BODY" != "null" ] && [ -n "$COMMENT_BODY" ]; then
@@ -126,6 +132,12 @@ do
             ./create_github_label.sh "$issue_num" "$status"
         elif [ -n "$SKIP_LABEL" ]; then
             log "Skipping label update (--no-label flag set)"
+        fi
+        
+        # Create/update validation report comment (if --report-comment flag is set)
+        if [ -n "$REPORT_COMMENT" ] && [ -n "$status" ] && [ "$COMMENT_ID" != "null" ]; then
+            log "Creating/updating validation report comment..."
+            ./create_github_comment.sh "$issue_num" "$COMMENT_ID" "$status" "$type" "$COMMENT_BODY"
         fi
     else
         log "No processable JSON comments found for issue $issue (may have unchecked checkbox)"
