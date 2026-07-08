@@ -180,7 +180,22 @@ format_markdown_report <- function(xx, issue_type) {
     if(current_result$exists) {
       output <- c(output, sprintf("**Current name:** Found in COL\n"))
       ids_to_check <- if(current_result$multiple) current_result$ids else list(current_result$id)
-      output <- c(output, sprintf("- COL ID(s): %s\n", paste(sapply(ids_to_check, function(id) col_link(id)), collapse=", ")))
+      
+      # Get taxon names for links
+      taxon_links <- sapply(ids_to_check, function(id) {
+        taxon <- suppressMessages(gbifbf:::cb_get_taxon_by_id(id))
+        if(!is.null(taxon) && nrow(taxon) > 0) {
+          full_name <- if(!is.na(taxon$name)) taxon$name else ""
+          if(!is.na(taxon$authorship) && taxon$authorship != "") {
+            full_name <- paste(full_name, taxon$authorship)
+          }
+          taxon_name <- if(full_name != "") paste0(col_link(id, full_name), " (", id, ")") else id
+        } else {
+          taxon_name <- id
+        }
+        taxon_name
+      })
+      output <- c(output, sprintf("- COL ID(s): %s\n", paste(taxon_links, collapse=", ")))
       
       # Check synonyms - get_syns returns character vector of synonym names
       all_syns <- lapply(ids_to_check, function(id) suppressMessages(gbifbf:::get_syns(id)))
@@ -212,7 +227,22 @@ format_markdown_report <- function(xx, issue_type) {
     if(proposed_result$exists) {
       output <- c(output, sprintf("\n**Proposed name:** Found in COL\n"))
       ids_to_check <- if(proposed_result$multiple) proposed_result$ids else list(proposed_result$id)
-      output <- c(output, sprintf("- COL ID(s): %s\n", paste(sapply(ids_to_check, function(id) col_link(id)), collapse=", ")))
+      
+      # Get taxon names for links
+      taxon_links <- sapply(ids_to_check, function(id) {
+        taxon <- suppressMessages(gbifbf:::cb_get_taxon_by_id(id))
+        if(!is.null(taxon) && nrow(taxon) > 0) {
+          full_name <- if(!is.na(taxon$name)) taxon$name else ""
+          if(!is.na(taxon$authorship) && taxon$authorship != "") {
+            full_name <- paste(full_name, taxon$authorship)
+          }
+          taxon_name <- if(full_name != "") paste0(col_link(id, full_name), " (", id, ")") else id
+        } else {
+          taxon_name <- id
+        }
+        taxon_name
+      })
+      output <- c(output, sprintf("- COL ID(s): %s\n", paste(taxon_links, collapse=", ")))
     } else {
       output <- c(output, sprintf("\n**Proposed name:** ❌ Not found in COL\n"))
       # Try base name search (fuzzy)
@@ -251,7 +281,22 @@ format_markdown_report <- function(xx, issue_type) {
     
     if(name_result$exists) {
       ids_to_check <- if(name_result$multiple) name_result$ids else list(name_result$id)
-      output <- c(output, sprintf("**Found in COL:** %s\n", paste(sapply(ids_to_check, function(id) col_link(id)), collapse=", ")))
+      
+      # Get taxon names for links
+      taxon_links <- sapply(ids_to_check, function(id) {
+        taxon <- suppressMessages(gbifbf:::cb_get_taxon_by_id(id))
+        if(!is.null(taxon) && nrow(taxon) > 0) {
+          full_name <- if(!is.na(taxon$name)) taxon$name else ""
+          if(!is.na(taxon$authorship) && taxon$authorship != "") {
+            full_name <- paste(full_name, taxon$authorship)
+          }
+          taxon_name <- if(full_name != "") paste0(col_link(id, full_name), " (", id, ")") else id
+        } else {
+          taxon_name <- id
+        }
+        taxon_name
+      })
+      output <- c(output, sprintf("**Found in COL:** %s\n", paste(taxon_links, collapse=", ")))
       
       for(id in ids_to_check) {
         classif <- suppressMessages(gbifbf:::cb_get_classification_by_id(id))
@@ -313,7 +358,22 @@ format_markdown_report <- function(xx, issue_type) {
     
     if(name_result$exists) {
       ids_to_check <- if(name_result$multiple) name_result$ids else list(name_result$id)
-      output <- c(output, sprintf("**Found in COL:** %s\n", paste(sapply(ids_to_check, function(id) col_link(id)), collapse=", ")))
+      
+      # Get taxon names for links
+      taxon_links <- sapply(ids_to_check, function(id) {
+        taxon <- suppressMessages(gbifbf:::cb_get_taxon_by_id(id))
+        if(!is.null(taxon) && nrow(taxon) > 0) {
+          full_name <- if(!is.na(taxon$name)) taxon$name else ""
+          if(!is.na(taxon$authorship) && taxon$authorship != "") {
+            full_name <- paste(full_name, taxon$authorship)
+          }
+          taxon_name <- if(full_name != "") paste0(col_link(id, full_name), " (", id, ")") else id
+        } else {
+          taxon_name <- id
+        }
+        taxon_name
+      })
+      output <- c(output, sprintf("**Found in COL:** %s\n", paste(taxon_links, collapse=", ")))
       
       for(id in ids_to_check) {
         taxon <- suppressMessages(gbifbf:::cb_get_taxon_by_id(id))
@@ -393,7 +453,22 @@ format_markdown_report <- function(xx, issue_type) {
     
     if(name_result$exists) {
       ids_to_check <- if(name_result$multiple) name_result$ids else list(name_result$id)
-      output <- c(output, sprintf("**Found in COL:** %s\n", paste(sapply(ids_to_check, function(id) col_link(id)), collapse=", ")))
+      
+      # Get taxon names for links
+      taxon_links <- sapply(ids_to_check, function(id) {
+        taxon <- suppressMessages(gbifbf:::cb_get_taxon_by_id(id))
+        if(!is.null(taxon) && nrow(taxon) > 0) {
+          full_name <- if(!is.na(taxon$name)) taxon$name else ""
+          if(!is.na(taxon$authorship) && taxon$authorship != "") {
+            full_name <- paste(full_name, taxon$authorship)
+          }
+          taxon_name <- if(full_name != "") paste0(col_link(id, full_name), " (", id, ")") else id
+        } else {
+          taxon_name <- id
+        }
+        taxon_name
+      })
+      output <- c(output, sprintf("**Found in COL:** %s\n", paste(taxon_links, collapse=", ")))
       
       for(id in ids_to_check) {
         taxon <- suppressMessages(gbifbf:::cb_get_taxon_by_id(id))

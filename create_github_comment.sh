@@ -1,13 +1,14 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 # Script to create or update automated validation report comments on GitHub issues
-# Usage: ./create_github_comment.sh <issue_number> <comment_id> <status> <issue_type> <json_comment_body>
+# Usage: ./create_github_comment.sh <issue_number> <comment_id> <status> <issue_type> <json_comment_body> [--force]
 
 issue=$1
 comment_id=$2
 status=$3
 issue_type=$4
 json_comment_body=$5
+force_flag=$6
 
 if [ -z "$issue" ] || [ -z "$comment_id" ] || [ -z "$status" ] || [ -z "$issue_type" ]; then
     echo "Error: Missing required arguments"
@@ -44,6 +45,8 @@ echo "Current status: '$status'"
 # Determine if we need to create/update the comment
 if [ -z "$existing_report_id" ]; then
     echo "No existing report found - will create new comment"
+elif [ "$force_flag" = "--force" ]; then
+    echo "Force update enabled - will update comment regardless of status"
 elif [ "$previous_status" = "$status" ]; then
     echo "Status unchanged ($status) - skipping comment update"
     exit 0

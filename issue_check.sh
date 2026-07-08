@@ -12,6 +12,7 @@ SKIP_LABEL=""
 LOG_FILE=""
 VERBOSE=""
 REPORT_COMMENT=""
+FORCE_UPDATE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -36,6 +37,10 @@ while [[ $# -gt 0 ]]; do
             REPORT_COMMENT="true"
             shift
             ;;
+        --force-update)
+            FORCE_UPDATE="true"
+            shift
+            ;;
         --log|--logfile)
             # If next argument exists and doesn't start with --, use it as filename
             if [ -n "$2" ] && [[ ! "$2" =~ ^-- ]] && [[ ! "$2" =~ ^[0-9]+$ ]]; then
@@ -48,13 +53,13 @@ while [[ $# -gt 0 ]]; do
             fi
             ;;
         [0-9]*)
-            # Numeric argument is an issue number
+            # Numeric argument is an issue numbe
             SINGLE_ISSUE="$1"
             shift
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--closed] [--report] [--no-label] [--verbose] [--report-comment] [--log [FILE]] [issue_number]"
+            echo "Usage: $0 [--closed] [--report] [--no-label] [--verbose] [--report-comment] [--force-update] [--log [FILE]] [issue_number]"
             exit 1
             ;;
     esac
@@ -137,7 +142,11 @@ do
         # Create/update validation report comment (if --report-comment flag is set)
         if [ -n "$REPORT_COMMENT" ] && [ -n "$status" ] && [ "$COMMENT_ID" != "null" ]; then
             log "Creating/updating validation report comment..."
-            ./create_github_comment.sh "$issue_num" "$COMMENT_ID" "$status" "$type" "$COMMENT_BODY"
+            if [ -n "$FORCE_UPDATE" ]; then
+                ./create_github_comment.sh "$issue_num" "$COMMENT_ID" "$status" "$type" "$COMMENT_BODY" --force
+            else
+                ./create_github_comment.sh "$issue_num" "$COMMENT_ID" "$status" "$type" "$COMMENT_BODY"
+            fi
         fi
     else
         log "No processable JSON comments found for issue $issue (may have unchecked checkbox)"
