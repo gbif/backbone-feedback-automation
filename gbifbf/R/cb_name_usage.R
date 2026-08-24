@@ -17,12 +17,21 @@ cb_name_usage = function(
   
   user <- Sys.getenv("GBIF_USER")
   pwd <- Sys.getenv("GBIF_PWD")
-    
+  
+  # Only use authentication if both credentials are set
+  if(user != "" && pwd != "") {
     tt <- httr::GET(url,
-            httr::authenticate(user, pwd),
-            query = list(q = q, verbose = verbose)) |>
-            httr::content(as = "text", encoding = "UTF-8") |>
-            jsonlite::fromJSON(flatten = TRUE) 
+                    httr::authenticate(user, pwd),
+                    query = list(q = q, verbose = verbose)) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  } else {
+    # No authentication
+    tt <- httr::GET(url,
+                    query = list(q = q, verbose = verbose)) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  } 
 
   alternatives <- tt |> purrr::pluck("alternatives") |> tibble::as_tibble()
   usage <- tt |> purrr::pluck("usage") |> tibble::as_tibble()
