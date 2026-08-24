@@ -76,12 +76,16 @@ syn_issue = function(xx) {
                 wp = NULL
             }
             if(!is.null(xx$wrongStatus)) {
-                ws = current_status == tolower(xx$wrongStatus)
+                # Check if either status contains the other (bidirectional match)
+                ws = grepl(tolower(xx$wrongStatus), current_status, fixed = TRUE) || 
+                     grepl(current_status, tolower(xx$wrongStatus), fixed = TRUE)
             } else {
                 ws = NULL
             }
             if(!is.null(xx$rightStatus)) {
-                rs = current_status == tolower(xx$rightStatus)
+                # Check if either status contains the other (bidirectional match)
+                rs = grepl(tolower(xx$rightStatus), current_status, fixed = TRUE) || 
+                     grepl(current_status, tolower(xx$rightStatus), fixed = TRUE)
             } else {
                 rs = NULL
             }
@@ -182,12 +186,16 @@ syn_issue = function(xx) {
         wp = NULL
     }
     if(!is.null(xx$wrongStatus)) {
-        ws = current_status == tolower(xx$wrongStatus)
+        # Check if either status contains the other (bidirectional match)
+        ws = grepl(tolower(xx$wrongStatus), current_status, fixed = TRUE) || 
+             grepl(current_status, tolower(xx$wrongStatus), fixed = TRUE)
     } else {
         ws = NULL
     }
     if(!is.null(xx$rightStatus)) {
-        rs = current_status == tolower(xx$rightStatus)
+        # Check if either status contains the other (bidirectional match)
+        rs = grepl(tolower(xx$rightStatus), current_status, fixed = TRUE) || 
+             grepl(current_status, tolower(xx$rightStatus), fixed = TRUE)
     } else {
         rs = NULL
     }

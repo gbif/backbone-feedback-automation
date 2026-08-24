@@ -497,7 +497,7 @@ format_markdown_report <- function(xx, issue_type) {
           # Check parent if rightParent is provided
           if(!is.null(xx$rightParent) && !is.na(xx$rightParent)) {
             # For synonyms, check if it's a synonym of the expected parent
-            if(!is.null(xx$rightStatus) && tolower(xx$rightStatus) == "synonym") {
+            if(!is.null(xx$rightStatus) && grepl("synonym", tolower(xx$rightStatus))) {
               # Search for the expected parent
               expected_parent_result <- suppressMessages(name_exists(xx$rightParent))
               if(expected_parent_result$exists) {
