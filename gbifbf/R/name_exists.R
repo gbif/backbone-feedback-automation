@@ -95,6 +95,39 @@ name_exists <- function(name, verbose = FALSE) {
     }
   }
   
+  # Strategy 2.5: Strip authorship and search with scientific name only
+  # Many names are stored without authorship or the match endpoint works better without it
+  gbif_message("Strategy 2.5: Strip authorship")
+  # Pattern: Remove authorship starting with author names (uppercase letter) followed by optional comma and year
+  # This handles patterns like "Author, Year", "Author & Author, Year", "(Author, Year)", etc.
+  name_no_auth <- gsub("\\s+[\\(]?[A-Z][a-z]+.*$", "", name)
+  name_no_auth <- trimws(name_no_auth)
+  
+  if(name_no_auth != "" && name_no_auth != name) {
+    gbif_message("  Trying without authorship: ", name_no_auth)
+    n_no_auth <- cb_name_usage(name_no_auth)
+    
+    # Check if exact FULL name is in results (COL returns full name with authorship)
+    if(nrow(n_no_auth$usage) > 0) {
+      match_idx <- which(n_no_auth$usage$labelHtml == name)
+      if(length(match_idx) > 0) {
+        strategy25a_ids <- unique(n_no_auth$usage$id[match_idx])
+        all_ids <- c(all_ids, strategy25a_ids)
+        gbif_message("  Found ", length(strategy25a_ids), " match(es) in primary results")
+      }
+    }
+    
+    # Check alternatives
+    if(nrow(n_no_auth$alternatives) > 0) {
+      match_idx <- which(n_no_auth$alternatives$labelHtml == name)
+      if(length(match_idx) > 0) {
+        strategy25b_ids <- unique(n_no_auth$alternatives$id[match_idx])
+        all_ids <- c(all_ids, strategy25b_ids)
+        gbif_message("  Found ", length(strategy25b_ids), " match(es) in alternatives")
+      }
+    }
+  }
+  
   # Strategy 3: Parse to base name and search
   gbif_message("Strategy 3: Base name parsing")
   parsed <- cb_name_parser(q = name)
@@ -155,11 +188,19 @@ name_exists <- function(name, verbose = FALSE) {
     user <- Sys.getenv("GBIF_USER")
     pwd <- Sys.getenv("GBIF_PWD")
     
-    search_result <- httr::GET(url,
-                               httr::authenticate(user, pwd),
-                               query = list(q = name, limit = 1000)) |>
-      httr::content(as = "text", encoding = "UTF-8") |>
-      jsonlite::fromJSON(flatten = TRUE)
+    # Only use authentication if both credentials are set
+    if(user != "" && pwd != "") {
+      search_result <- httr::GET(url,
+                                 httr::authenticate(user, pwd),
+                                 query = list(q = name, limit = 1000)) |>
+        httr::content(as = "text", encoding = "UTF-8") |>
+        jsonlite::fromJSON(flatten = TRUE)
+    } else {
+      search_result <- httr::GET(url,
+                                 query = list(q = name, limit = 1000)) |>
+        httr::content(as = "text", encoding = "UTF-8") |>
+        jsonlite::fromJSON(flatten = TRUE)
+    }
     
     if(!is.null(search_result$result) && nrow(search_result$result) > 0) {
       # Strip HTML from usage.labelHtml to compare

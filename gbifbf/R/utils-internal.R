@@ -32,11 +32,19 @@ cb_name_suggest <- function(q, key = "3LXR", limit = 20) {
   user <- Sys.getenv("GBIF_USER")
   pwd <- Sys.getenv("GBIF_PWD")
   
-  result <- httr::GET(url,
-                      httr::authenticate(user, pwd),
-                      query = list(q = q, limit = limit)) |>
-    httr::content(as = "text", encoding = "UTF-8") |>
-    jsonlite::fromJSON(flatten = TRUE)
+  # Only use authentication if both credentials are set
+  if(user != "" && pwd != "") {
+    result <- httr::GET(url,
+                        httr::authenticate(user, pwd),
+                        query = list(q = q, limit = limit)) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  } else {
+    result <- httr::GET(url,
+                        query = list(q = q, limit = limit)) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  }
   
   # Return as tibble if we got results
   if(!is.null(result) && length(result) > 0) {
@@ -55,10 +63,17 @@ cb_get_taxon_by_id <- function(id, key = "3LXR") {
   user <- Sys.getenv("GBIF_USER")
   pwd <- Sys.getenv("GBIF_PWD")
   
-  result <- httr::GET(url,
-                      httr::authenticate(user, pwd)) |>
-    httr::content(as = "text", encoding = "UTF-8") |>
-    jsonlite::fromJSON(flatten = TRUE)
+  # Only use authentication if both credentials are set
+  if(user != "" && pwd != "") {
+    result <- httr::GET(url,
+                        httr::authenticate(user, pwd)) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  } else {
+    result <- httr::GET(url) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  }
   
   # Extract usage information and format like cb_name_usage does
   if(!is.null(result)) {
