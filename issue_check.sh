@@ -4,6 +4,16 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Check for GitHub token (GH_TOKEN or GITHUB_TOKEN)
+if [ -z "$GH_TOKEN" ]; then
+    if [ -n "$GITHUB_TOKEN" ]; then
+        GH_TOKEN="$GITHUB_TOKEN"
+    else
+        echo "Error: No GitHub token found. Set GH_TOKEN or GITHUB_TOKEN environment variable."
+        exit 1
+    fi
+fi
+
 # Parse command-line options
 ISSUE_STATE="open"
 REPORT_FILE="report.tsv"
