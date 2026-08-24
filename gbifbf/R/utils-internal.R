@@ -106,10 +106,17 @@ exists_only_3LXRC <- function(id) {
   user <- Sys.getenv("GBIF_USER")
   pwd <- Sys.getenv("GBIF_PWD")
   
-  result <- httr::GET(url,
-                      httr::authenticate(user, pwd)) |>
-    httr::content(as = "text", encoding = "UTF-8") |>
-    jsonlite::fromJSON(flatten = TRUE)
+  # Make authentication optional
+  if(user != "" && pwd != "") {
+    result <- httr::GET(url,
+                        httr::authenticate(user, pwd)) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  } else {
+    result <- httr::GET(url) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  }
   
   # Extract usage information if found in 3LXRC
   usage_3lxrc <- tibble::tibble()
@@ -154,9 +161,15 @@ cb_get_classification_by_id <- function(id, key = "3LXR") {
   while(!is.na(current_id) && current_id != "" && !is.null(current_id)) {
     url <- paste0("https://api.checklistbank.org/dataset/", key, "/nameusage/", current_id)
     parent <- tryCatch({
-      httr::GET(url, httr::authenticate(user, pwd)) |>
-        httr::content(as = "text", encoding = "UTF-8") |>
-        jsonlite::fromJSON(flatten = TRUE)
+      if(user != "" && pwd != "") {
+        httr::GET(url, httr::authenticate(user, pwd)) |>
+          httr::content(as = "text", encoding = "UTF-8") |>
+          jsonlite::fromJSON(flatten = TRUE)
+      } else {
+        httr::GET(url) |>
+          httr::content(as = "text", encoding = "UTF-8") |>
+          jsonlite::fromJSON(flatten = TRUE)
+      }
     }, error = function(e) NULL)
     
     if(!is.null(parent) && !is.null(parent$label)) {
@@ -182,11 +195,18 @@ cb_name_parser <- function(q=NULL) {
   user <- Sys.getenv("GBIF_USER")
   pwd <- Sys.getenv("GBIF_PWD")
 
-  tt <- httr::GET(url,
-                  httr::authenticate(user, pwd),
-                  query = list(q = q)) |>
-    httr::content(as = "text", encoding = "UTF-8") |>
-    jsonlite::fromJSON(flatten = TRUE)
+  if(user != "" && pwd != "") {
+    tt <- httr::GET(url,
+                    httr::authenticate(user, pwd),
+                    query = list(q = q)) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  } else {
+    tt <- httr::GET(url,
+                    query = list(q = q)) |>
+      httr::content(as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(flatten = TRUE)
+  }
 
   return(tt)
 }
