@@ -105,24 +105,39 @@ fi
 for issue in "${issue_array[@]}"
 do
     log "Processing issue: $issue"
-    COMMENTS=$(curl -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/gbif/backbone-feedback/issues/$issue/comments)
+    COMMENTS=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/gbif/backbone-feedback/issues/$issue/comments)
     # echo $COMMENTS
     if [ -z "$COMMENTS" ]; then
         log "Error: No comments received for issue $issue"
         continue
     fi
 
-    if ! echo "$COMMENTS" | jq empty; then
+    if ! echo "$COMMENTS" | jq empty 2>/dev/null; then
         log "Error: Invalid JSON received for issue $issue"
+        log "Response: $COMMENTS"
+        continue
+    fi
+    
+    # Check if response is an error message
+    ERROR_MSG=$(echo "$COMMENTS" | jq -r 'if type == "object" and .message then .message else empty end' 2>/dev/null)
+    if [ -n "$ERROR_MSG" ]; then
+        log "API Error for issue $issue: $ERROR_MSG"
         continue
     fi
     
     # Process comments with "// json for auto-checking" UNLESS they have an unchecked checkbox
     # Skip ONLY if checkbox is explicitly unchecked: "- [ ] **Accept AI suggestion**"
     # Process if: (1) checkbox is checked, OR (2) no checkbox exists (legacy comments)
-    JSON=$(echo "$COMMENTS" | jq '.[] | select(.body | contains("// json for auto-checking") and (contains("- [ ] **Accept AI suggestion**") | not)) | {id, body}')
-    COMMENT_ID=$(echo "$JSON" | jq '.id')
-    COMMENT_BODY=$(echo "$JSON" | jq '.body')
+    # Wrap in array and take first match only
+    JSON=$(echo "$COMMENTS" | jq '[.[] | select(.body | contains("// json for auto-checking") and (contains("- [ ] **Accept AI suggestion**") | not)) | {id, body}] | .[0] // null')
+    
+    if [ "$JSON" = "null" ] || [ -z "$JSON" ]; then
+        log "No processable JSON comments found for issue $issue (may have unchecked checkbox)"
+        continue
+    fi
+    
+    COMMENT_ID=$(echo "$JSON" | jq -r '.id')
+    COMMENT_BODY=$(echo "$JSON" | jq -r '.body')
     # echo $COMMENT_BODY
     if [ "$COMMENT_BODY" != "null" ] && [ -n "$COMMENT_BODY" ]; then
         # Run process_json.R and capture output (format: issue|status|type)
@@ -148,8 +163,6 @@ do
                 ./create_github_comment.sh "$issue_num" "$COMMENT_ID" "$status" "$type" "$COMMENT_BODY"
             fi
         fi
-    else
-        log "No processable JSON comments found for issue $issue (may have unchecked checkbox)"
     fi
 done
 
