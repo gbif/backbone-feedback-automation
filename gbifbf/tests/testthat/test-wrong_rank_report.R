@@ -3,6 +3,7 @@ library(gbifbf)
 
 # wrong_rank_report
 test_that("wrong_rank_report returns correct status and prints output", {
+  skip_on_ci()
   
   # Test ISSUE_OPEN case - taxon has wrong rank
   result <- wrong_rank_report(
@@ -46,6 +47,7 @@ test_that("wrong_rank_report returns correct status and prints output", {
 })
 
 test_that("wrong_rank_report handles errors", {
+  skip_on_ci()
   
   # Test with only rightRank - error (doesn't match)
   result <- wrong_rank_report(

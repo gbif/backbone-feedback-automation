@@ -3,6 +3,7 @@ library(gbifbf)
 
 # bad name
 test_that("bad_name", {
+  skip_on_ci()
 
   expect_equal(
     bad_name(

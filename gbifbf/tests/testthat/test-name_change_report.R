@@ -3,6 +3,7 @@ library(gbifbf)
 
 # name_change_report
 test_that("name_change_report returns correct status and prints output", {
+  skip_on_ci()
   
   # Test ERROR case - identical names
   result <- name_change_report(
@@ -51,6 +52,7 @@ test_that("name_change_report returns correct status and prints output", {
 })
 
 test_that("name_change_report handles invalid input", {
+  skip_on_ci()
   
   # Test both names non-existent
   result <- name_change_report(

@@ -55,17 +55,17 @@ name_change = function(xx) {
     cn_exists = cn_result$exists
     pn_exists = pn_result$exists
     
-    # CASE 1: currentName removed (doesn't exist) AND proposedName exists → CLOSED
+    # CASE 1: currentName removed (doesn't exist) AND proposedName exists -> CLOSED
     if(!cn_exists && pn_exists) {
         return("ISSUE_CLOSED")
     }
     
-    # CASE 2: Neither name exists → ERROR (can't validate the change)
+    # CASE 2: Neither name exists -> ERROR (can't validate the change)
     if(!cn_exists && !pn_exists) {
         return("JSON-TAG-ERROR")
     }
     
-    # CASE 3: currentName exists AND proposedName doesn't exist → OPEN
+    # CASE 3: currentName exists AND proposedName doesn't exist -> OPEN
     if(cn_exists && !pn_exists) {
         return("ISSUE_OPEN")
     }
@@ -312,11 +312,11 @@ name_change_report <- function(xx) {
     # Print final result
     cat("RESULT:               ")
     if(result == "ISSUE_CLOSED") {
-        cat("✓ ISSUE CLOSED - Name change implemented\n")
+        cat("OK ISSUE CLOSED - Name change implemented\n")
     } else if(result == "ISSUE_OPEN") {
-        cat("✗ ISSUE OPEN - Name change not yet implemented\n")
+        cat("ERROR ISSUE OPEN - Name change not yet implemented\n")
     } else {
-        cat("⚠ ERROR - Unable to validate name change\n")
+        cat("WARNING ERROR - Unable to validate name change\n")
     }
     
     cat("\n========================================\n\n")

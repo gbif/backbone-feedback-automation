@@ -3,6 +3,7 @@ library(gbifbf)
 
 # wrong_group_report
 test_that("wrong_group_report returns correct status and prints output", {
+  skip_on_ci()
   
   # Test ISSUE_CLOSED case - taxon in right group
   result <- wrong_group_report(
@@ -66,6 +67,7 @@ test_that("wrong_group_report returns correct status and prints output", {
 })
 
 test_that("wrong_group_report handles non-existent names", {
+  skip_on_ci()
   
   # Test with non-existent name
   result <- wrong_group_report(

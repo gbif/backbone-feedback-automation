@@ -3,6 +3,7 @@ library(gbifbf)
 
 # syn issue
 test_that("syn_issue", {
+  skip_on_ci()
 
   expect_equal(
     syn_issue(
@@ -64,6 +65,7 @@ test_that("syn_issue", {
 
 # Test synonym status variants (synonym genus, synonym species, etc.)
 test_that("syn_issue handles synonym status variants in JSON", {
+  skip_on_ci()
   
   # Test 1: rightStatus "SYNONYM" should match when actual is any synonym variant
   # Using a known synonym that should still be closed

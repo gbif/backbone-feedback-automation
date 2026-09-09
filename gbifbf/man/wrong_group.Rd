@@ -30,7 +30,17 @@ parent groups appear in that hierarchy. It supports:
   \item Checking if taxon is under \code{rightGroup}
   \item Base name fallback for group names
   \item Alternative name lookup if exact match fails
+  \item Multiple name handling: when multiple taxa match the exact name,
+        all matches are checked and verified for consistency
 }
+
+When multiple exact name matches exist, the function checks the group
+classification for ALL matching taxa. If all agree on the status, that
+status is returned. If they disagree, a conservative approach is taken:
+the issue is only marked as ISSUE_CLOSED when ALL matches are closed.
+If ANY match still has ISSUE_OPEN, the overall status is ISSUE_OPEN.
+This ensures that homonyms across different nomenclatural codes are
+all verified before closing an issue.
 
 HTML tags are stripped from parent names before comparison.
 }

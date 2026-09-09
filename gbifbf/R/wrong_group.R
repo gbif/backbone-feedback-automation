@@ -386,11 +386,11 @@ wrong_group_report <- function(xx) {
     # Print final result
     cat("RESULT:               ")
     if(result == "ISSUE_CLOSED") {
-        cat("✓ ISSUE CLOSED - Taxon in correct group\n")
+        cat("OK ISSUE CLOSED - Taxon in correct group\n")
     } else if(result == "ISSUE_OPEN") {
-        cat("✗ ISSUE OPEN - Taxon still in wrong group\n")
+        cat("ERROR ISSUE OPEN - Taxon still in wrong group\n")
     } else {
-        cat("⚠ ERROR - Unable to validate group classification\n")
+        cat("WARNING ERROR - Unable to validate group classification\n")
     }
     
     cat("\n========================================\n\n")

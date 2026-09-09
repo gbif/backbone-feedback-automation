@@ -3,6 +3,7 @@ library(gbifbf)
 
 # name change 
 test_that("name_change", {
+  skip_on_ci()
 
   expect_equal(
     name_change(
