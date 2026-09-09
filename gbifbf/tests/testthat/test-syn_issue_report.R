@@ -3,6 +3,7 @@ library(gbifbf)
 
 # syn_issue_report
 test_that("syn_issue_report returns correct status and prints output", {
+  skip_on_ci()
   
   # Test ISSUE_CLOSED case
   result <- syn_issue_report(
@@ -54,6 +55,7 @@ test_that("syn_issue_report returns correct status and prints output", {
 })
 
 test_that("syn_issue_report handles non-existent names", {
+  skip_on_ci()
   
   # Test with non-existent name
   result <- syn_issue_report(

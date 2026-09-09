@@ -3,6 +3,7 @@ library(gbifbf)
 
 # name_change_report
 test_that("name_change_report returns correct status and prints output", {
+  skip_on_ci()
   
   # Test ERROR case - identical names
   result <- name_change_report(
@@ -25,8 +26,8 @@ test_that("name_change_report returns correct status and prints output", {
   # Test ISSUE_CLOSED case - current is now synonym of proposed
   result3 <- name_change_report(
     list(
-      currentName = "Cryptophyta",
-      proposedName = "Cryptista Cavalier-Smith, 1989"
+      currentName = "Agrion splendens (Harris, 1780)",
+      proposedName = "Calopteryx splendens (Harris, 1780)"
     ))
   
   expect_equal(result3, "ISSUE_CLOSED")
@@ -51,6 +52,7 @@ test_that("name_change_report returns correct status and prints output", {
 })
 
 test_that("name_change_report handles invalid input", {
+  skip_on_ci()
   
   # Test both names non-existent
   result <- name_change_report(

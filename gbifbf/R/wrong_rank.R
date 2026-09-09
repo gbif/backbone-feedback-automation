@@ -258,7 +258,7 @@ wrong_rank_report <- function(xx) {
         
         if(nrow(n) == 0 || !("rank" %in% names(n))) {
             cat("  Current Rank:       (Unable to retrieve)\n\n")
-            cat("RESULT:               ⚠ ERROR - Unable to validate rank\n")
+            cat("RESULT:               WARNING ERROR - Unable to validate rank\n")
             cat("\n========================================\n\n")
             return(invisible("JSON-TAG-ERROR"))
         }
@@ -267,7 +267,7 @@ wrong_rank_report <- function(xx) {
         
         if(is.null(r) || is.na(r)) {
             cat("  Current Rank:       (Unable to retrieve)\n\n")
-            cat("RESULT:               ⚠ ERROR - Unable to validate rank\n")
+            cat("RESULT:               WARNING ERROR - Unable to validate rank\n")
             cat("\n========================================\n\n")
             return(invisible("JSON-TAG-ERROR"))
         }
@@ -331,11 +331,11 @@ wrong_rank_report <- function(xx) {
     # Print final result
     cat("RESULT:               ")
     if(result == "ISSUE_CLOSED") {
-        cat("✓ ISSUE CLOSED - Taxon has correct rank\n")
+        cat("OK ISSUE CLOSED - Taxon has correct rank\n")
     } else if(result == "ISSUE_OPEN") {
-        cat("✗ ISSUE OPEN - Taxon still has wrong rank\n")
+        cat("ERROR ISSUE OPEN - Taxon still has wrong rank\n")
     } else {
-        cat("⚠ ERROR - Unable to validate rank\n")
+        cat("WARNING ERROR - Unable to validate rank\n")
     }
     
     cat("\n========================================\n\n")

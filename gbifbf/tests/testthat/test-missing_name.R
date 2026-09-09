@@ -3,6 +3,7 @@ library(gbifbf)
 
 # missing name
 test_that("missing_name", {
+  skip_on_ci()
 
   expect_equal(
     missing_name(

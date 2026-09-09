@@ -185,9 +185,9 @@ bad_name_report <- function(xx) {
     # Print final result
     cat("RESULT:               ")
     if(result == "ISSUE_CLOSED") {
-        cat("✓ ISSUE CLOSED - Bad name has been removed from COL\n")
+        cat("OK ISSUE CLOSED - Bad name has been removed from COL\n")
     } else {
-        cat("✗ ISSUE OPEN - Bad name still exists in COL\n")
+        cat("ERROR ISSUE OPEN - Bad name still exists in COL\n")
     }
     
     cat("\n========================================\n\n")

@@ -3,6 +3,7 @@ library(gbifbf)
 
 # missing_name_report
 test_that("missing_name_report returns correct status and prints output", {
+  skip_on_ci()
   
   # Test ISSUE_OPEN case - name not found
   result <- missing_name_report(

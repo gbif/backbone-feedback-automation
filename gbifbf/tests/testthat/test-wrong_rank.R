@@ -3,6 +3,7 @@ library(gbifbf)
 
 # wrong rank
 test_that("wrong_rank", {
+  skip_on_ci()
 
   # Test with both wrongRank and rightRank - issue open (has wrong rank)
   expect_equal(

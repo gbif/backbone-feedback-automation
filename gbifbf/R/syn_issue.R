@@ -447,11 +447,11 @@ syn_issue_report <- function(xx) {
     # Print final result
     cat("RESULT:               ")
     if(result == "ISSUE_CLOSED") {
-        cat("✓ ISSUE CLOSED - All checks passed\n")
+        cat("OK ISSUE CLOSED - All checks passed\n")
     } else if(result == "ISSUE_OPEN") {
-        cat("✗ ISSUE OPEN - Problem persists\n")
+        cat("ERROR ISSUE OPEN - Problem persists\n")
     } else {
-        cat("⚠ ERROR - Unable to validate\n")
+        cat("WARNING ERROR - Unable to validate\n")
     }
     
     cat("\n========================================\n\n")

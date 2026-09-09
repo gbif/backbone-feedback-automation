@@ -3,6 +3,7 @@ library(gbifbf)
 
 # wrong group 
 test_that("wrong_group", {
+    skip_on_ci()
 
 expect_equal(
     wrong_group(

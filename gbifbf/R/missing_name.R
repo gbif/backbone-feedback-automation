@@ -185,9 +185,9 @@ missing_name_report <- function(xx) {
     # Print final result
     cat("RESULT:               ")
     if(result == "ISSUE_CLOSED") {
-        cat("✓ ISSUE CLOSED - Name has been added to COL\n")
+        cat("OK ISSUE CLOSED - Name has been added to COL\n")
     } else {
-        cat("✗ ISSUE OPEN - Name still missing from COL\n")
+        cat("ERROR ISSUE OPEN - Name still missing from COL\n")
     }
     
     cat("\n========================================\n\n")

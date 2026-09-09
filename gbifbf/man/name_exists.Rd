@@ -13,10 +13,12 @@ name_exists(name, verbose = FALSE)
 Defaults to FALSE. Messages also respect the global \code{gbifbf.verbose} option.}
 }
 \value{
-A list with two elements:
+A list with four elements:
   \describe{
     \item{exists}{Logical: TRUE if the exact name string is found, FALSE otherwise}
-    \item{id}{Character: The ChecklistBank ID (e.g., "TJ8H5") if found, NA_character_ if not found}
+    \item{id}{Character: The ChecklistBank ID (e.g., "TJ8H5") if found, NA_character_ if not found. If multiple matches exist, this is the first one.}
+    \item{ids}{Character vector: All matching ChecklistBank IDs if found, NA_character_ if not found}
+    \item{multiple}{Logical: TRUE if multiple exact matches were found, FALSE otherwise}
   }
 }
 \description{
@@ -25,7 +27,9 @@ exactly in the GBIF Backbone (ChecklistBank). Uses multiple search strategies
 but only returns TRUE if the exact input string is found.
 }
 \details{
-This function employs multiple search strategies to locate a name:
+This function employs multiple search strategies to locate a name and
+**always runs all strategies** to ensure all exact duplicates are found
+(e.g., homonyms across different nomenclatural codes):
 \enumerate{
   \item Direct lookup via \code{cb_name_usage()} in primary results
   \item Search in alternative name matches
@@ -33,21 +37,33 @@ This function employs multiple search strategies to locate a name:
         search with base name, then verify exact match in results
   \item Strip special characters and search, then verify exact match
   \item Use the search endpoint which may find name variants not returned by match endpoint
+  \item Use the ChecklistBank suggest endpoint which excels at finding homonyms across nomenclatural codes
 }
 
-All strategies validate that the EXACT input string appears in the results
-before returning TRUE. Partial matches or similar names do not count.
+All strategies validate that the EXACT input string appears in the results.
+Results from all strategies are consolidated and deduplicated. Partial matches
+or similar names do not count.
+
+When multiple exact matches exist (e.g., homonyms under different nomenclatural codes),
+all matching IDs are returned in the \code{ids} field and \code{multiple} is set to TRUE.
+This ensures taxonomic homonyms are properly detected and can be handled appropriately.
 }
 \examples{
 \dontrun{
 result <- name_exists("Trichopria carinata (Thomson, 1858)")
-# result$exists = TRUE, result$id = "TJ8P3"
+# result$exists = TRUE, result$id = "TJ8P3", result$multiple = FALSE
 
 result <- name_exists("Fake name that does not exist")
-# result$exists = FALSE, result$id = NA
+# result$exists = FALSE, result$id = NA, result$multiple = FALSE
 
 result <- name_exists("Trichopria aequata (Thomson, 1858)", verbose = TRUE)
-# result$exists = TRUE, result$id = "TJ8H5"
+# result$exists = TRUE, result$id = "TJ8H5", result$multiple = FALSE
+
+# Check for multiple matches
+result <- name_exists("Some ambiguous name")
+if(result$multiple) {
+  message("Multiple matches found: ", paste(result$ids, collapse = ", "))
+}
 }
 
 }
