@@ -25,8 +25,8 @@ test_that("name_change_report returns correct status and prints output", {
   # Test ISSUE_CLOSED case - current is now synonym of proposed
   result3 <- name_change_report(
     list(
-      currentName = "Cryptophyta",
-      proposedName = "Cryptista Cavalier-Smith, 1989"
+      currentName = "Agrion splendens (Harris, 1780)",
+      proposedName = "Calopteryx splendens (Harris, 1780)"
     ))
   
   expect_equal(result3, "ISSUE_CLOSED")

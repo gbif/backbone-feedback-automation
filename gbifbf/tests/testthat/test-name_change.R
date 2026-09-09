@@ -20,8 +20,8 @@ test_that("name_change", {
     expect_equal(
     name_change(
         list(
-        currentName = "Cryptophyta",
-        proposedName = "Cryptista Cavalier-Smith, 1989")),  
+      currentName = "Agrion splendens (Harris, 1780)",
+      proposedName = "Calopteryx splendens (Harris, 1780)")),
     "ISSUE_CLOSED")
     
   # Test with non-existent proposed name but existing current name
