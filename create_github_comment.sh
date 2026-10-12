@@ -19,7 +19,7 @@ fi
 echo "Creating/updating validation report for issue #$issue (comment: $comment_id, status: $status)"
 
 MARKER="🤖 AUTOMATED VALIDATION REPORT"
-REPO="gbif/backbone-feedback"
+REPO="${FOCAL_ISSUE_REPO:-gbif/backbone-feedback}"
 
 # Get all comments on this issue
 all_comments=$(gh api "/repos/$REPO/issues/$issue/comments" --jq '.[] | {id: .id, body: .body}')

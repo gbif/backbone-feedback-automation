@@ -4,6 +4,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+FOCAL_ISSUE_REPO="${FOCAL_ISSUE_REPO:-gbif/backbone-feedback}"
+export FOCAL_ISSUE_REPO
+
 # Check for GitHub token (GH_TOKEN or GITHUB_TOKEN)
 if [ -z "$GH_TOKEN" ]; then
     if [ -n "$GITHUB_TOKEN" ]; then
@@ -104,7 +107,12 @@ if [ -n "$SINGLE_ISSUE" ]; then
 else
     # Fetch issues based on state
     log "Fetching all $ISSUE_STATE issues from project..."
-    issues=$(gh issue list --repo gbif/backbone-feedback --search "is:issue is:$ISSUE_STATE project:gbif/23" --json number --jq '.[].number' --limit 500)
+    if [ "$FOCAL_ISSUE_REPO" = "gbif/backbone-feedback" ]; then
+        ISSUE_SEARCH="is:issue is:$ISSUE_STATE project:gbif/23"
+    else
+        ISSUE_SEARCH="is:issue is:$ISSUE_STATE"
+    fi
+    issues=$(gh issue list --repo "$FOCAL_ISSUE_REPO" --search "$ISSUE_SEARCH" --json number --jq '.[].number' --limit 500)
     log $issues
     
     for issue in $issues; do
@@ -115,7 +123,7 @@ fi
 for issue in "${issue_array[@]}"
 do
     log "Processing issue: $issue"
-    COMMENTS=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/gbif/backbone-feedback/issues/$issue/comments)
+    COMMENTS=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/$FOCAL_ISSUE_REPO/issues/$issue/comments")
     # echo $COMMENTS
     if [ -z "$COMMENTS" ]; then
         log "Error: No comments received for issue $issue"

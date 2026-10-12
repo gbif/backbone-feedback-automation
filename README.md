@@ -27,6 +27,9 @@ Main orchestrator that fetches GitHub issues and processes them.
 # Process all open issues (labels updated immediately, no report)
 ./issue_check.sh
 
+# Process issues in another repository (default: gbif/backbone-feedback)
+FOCAL_ISSUE_REPO=CatalogueOfLife/data ./issue_check.sh
+
 # Process a single issue
 ./issue_check.sh 123
 
@@ -72,6 +75,7 @@ Main orchestrator that fetches GitHub issues and processes them.
 - `--report-comment`: Create/update automated validation report comments on GitHub issues. Only updates when status changes (disabled by default)
 - `--log [FILE]` or `--logfile [FILE]`: Save all output to a log file (also displayed on console). Defaults to log.txt if no filename provided.
 - `[issue_number]`: Process a single issue by number instead of all issues
+- `FOCAL_ISSUE_REPO`: GitHub repository in `owner/name` format. Defaults to `gbif/backbone-feedback`; the `project:gbif/23` filter is only used for that default repository.
 
 **Statuses:**
 - `ISSUE_OPEN`: Issue is still open in ChecklistBank

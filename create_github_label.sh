@@ -1,6 +1,8 @@
 
 #!/bin/bash
 
+FOCAL_ISSUE_REPO="${FOCAL_ISSUE_REPO:-gbif/backbone-feedback}"
+
 # Function to update label for a single issue
 update_issue_label() {
     local issue=$1
@@ -26,7 +28,7 @@ update_issue_label() {
     
     echo "Target label: $update_label"
     
-    labels=$(gh issue view "$issue" --repo gbif/backbone-feedback --json labels --jq '.labels[].name')
+    labels=$(gh issue view "$issue" --repo "$FOCAL_ISSUE_REPO" --json labels --jq '.labels[].name')
     
     current_label="" 
     if echo "$labels" | grep -qF "autocheck - issue open on xRelease"; then
@@ -45,13 +47,13 @@ update_issue_label() {
     fi
     
     # Remove all autocheck labels
-    gh issue edit $issue --repo gbif/backbone-feedback --remove-label 'autocheck - issue open on xRelease' 2>/dev/null || true
-    gh issue edit $issue --repo gbif/backbone-feedback --remove-label 'autocheck - issue closed on xRelease' 2>/dev/null || true
-    gh issue edit $issue --repo gbif/backbone-feedback --remove-label 'autocheck - status unclear on xRelease' 2>/dev/null || true
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue open on xRelease' 2>/dev/null || true
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue closed on xRelease' 2>/dev/null || true
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - status unclear on xRelease' 2>/dev/null || true
     
     # Add the new label
     echo "Updating label to: $update_label"
-    gh issue edit $issue --repo gbif/backbone-feedback --add-label "$update_label"
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --add-label "$update_label"
 }
 
 # Check if arguments are provided for single-issue mode
