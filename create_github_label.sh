@@ -55,7 +55,6 @@ update_issue_label() {
     gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue unclear on COL XR' 2>/dev/null || true
     gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue open on xRelease' 2>/dev/null || true
     gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue closed on xRelease' 2>/dev/null || true
-    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - status unclear on xRelease' 2>/dev/null || true
     
     # Add the new label
     echo "Updating label to: $update_label"
@@ -93,7 +92,5 @@ while IFS=$'\t' read -r issue status type; do
     update_issue_label "$issue" "$status"
 
 done < "$tsv_file"
-
-
 
 
