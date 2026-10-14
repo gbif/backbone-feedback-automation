@@ -12,13 +12,13 @@ update_issue_label() {
     
     case "$status" in
         "ISSUE_CLOSED")
-            update_label="autocheck - issue closed on xRelease"
+            update_label="autocheck - issue closed on COL"
             ;;
         "ISSUE_OPEN")
-            update_label="autocheck - issue open on xRelease"
+            update_label="autocheck - issue open on COL"
             ;;
         "JSON-TAG-ERROR")
-            update_label="autocheck - status unclear on xRelease"
+            update_label="autocheck - issue unclear on COL"
             ;;
         *)
             echo "Unknown status: $status"
@@ -31,12 +31,12 @@ update_issue_label() {
     labels=$(gh issue view "$issue" --repo "$FOCAL_ISSUE_REPO" --json labels --jq '.labels[].name')
     
     current_label="" 
-    if echo "$labels" | grep -qF "autocheck - issue open on xRelease"; then
-        current_label="autocheck - issue open on xRelease"
-    elif echo "$labels" | grep -qF "autocheck - issue closed on xRelease"; then
-        current_label="autocheck - issue closed on xRelease"
-    elif echo "$labels" | grep -qF "autocheck - status unclear on xRelease"; then
-        current_label="autocheck - status unclear on xRelease"
+    if echo "$labels" | grep -qF "autocheck - issue open on COL"; then
+        current_label="autocheck - issue open on COL"
+    elif echo "$labels" | grep -qF "autocheck - issue closed on COL"; then
+        current_label="autocheck - issue closed on COL"
+    elif echo "$labels" | grep -qF "autocheck - issue unclear on COL"; then
+        current_label="autocheck - issue unclear on COL"
     fi
     
     echo "Current label: $current_label"
@@ -46,7 +46,13 @@ update_issue_label() {
         return 0
     fi
     
-    # Remove all autocheck labels
+    # Remove current and legacy autocheck labels before applying the new one.
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue open on COL' 2>/dev/null || true
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue closed on COL' 2>/dev/null || true
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue unclear on COL' 2>/dev/null || true
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue open on COL XR' 2>/dev/null || true
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue closed on COL XR' 2>/dev/null || true
+    gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue unclear on COL XR' 2>/dev/null || true
     gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue open on xRelease' 2>/dev/null || true
     gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - issue closed on xRelease' 2>/dev/null || true
     gh issue edit "$issue" --repo "$FOCAL_ISSUE_REPO" --remove-label 'autocheck - status unclear on xRelease' 2>/dev/null || true
@@ -87,7 +93,6 @@ while IFS=$'\t' read -r issue status type; do
     update_issue_label "$issue" "$status"
 
 done < "$tsv_file"
-
 
 
 

@@ -83,9 +83,9 @@ FOCAL_ISSUE_REPO=CatalogueOfLife/data ./issue_check.sh
 - `JSON-TAG-ERROR`: Unable to parse or process the JSON feedback
 
 **Labels applied:**
-- `autocheck - issue open on xRelease`: Issue still open in ChecklistBank
-- `autocheck - issue closed on xRelease`: Issue resolved in ChecklistBank
-- `autocheck - status unclear on xRelease`: Unable to determine status
+- `autocheck - issue open on COL`: According to the JSON comment
+- `autocheck - issue closed on COL`: According to the JSON comment
+- `autocheck - issue unclear on COL`: According to the JSON comment
 
 **Automated Validation Report Comments:**
 
@@ -131,4 +131,3 @@ Creates or updates automated validation report comments on GitHub issues. This s
 - Uses GitHub API via `gh` CLI to POST new comment or PATCH existing comment
 
 This script implements the same smart update logic as `create_github_label.sh` to avoid comment spam.
-
