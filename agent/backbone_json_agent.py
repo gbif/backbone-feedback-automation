@@ -18,6 +18,7 @@ JSON Tags Supported:
 4. nameChange: Name should be changed
 5. wrongGroup: Taxon placed in wrong higher group
 6. synIssue: Synonym relationship issue
+7. wrongBasionym: Incorrect original-name relationship
 """
 
 import os
@@ -204,8 +205,11 @@ CRITICAL RULES - THESE ARE NOT OPTIONAL:
   * Use "Anthocoridae Fieber, 1837" in your JSON (the label), NOT just "Anthocoridae"
 - NEVER output JSON before calling col_api_match for all names
 - NEVER create non-existent species names or group names without validation
-- ONLY use the 6 JSON tag types defined below - do not create new tag types
+- ONLY use the 7 JSON tag types defined below - do not create new tag types
 - If a name doesn't exist in COL API, use the exact name provided by the user
+- For wrongBasionym/rightBasionym, preserve full names supplied by the user exactly,
+  including authorship, case, punctuation and whitespace, even if col_api_match
+  returns a normalized label. These details may be the subject of the issue.
 
 MULTIPLE ISSUES HANDLING:
 - **IMPORTANT**: A single user message may describe MULTIPLE distinct taxonomic issues
@@ -286,7 +290,47 @@ Note: wrongGroup or rightGroup can be null if only one is known
 }
 Note: Use ACCEPTED or SYNONYM for wrongStatus and rightStatus fields
 
+7. WRONG BASIONYM - When a taxon has an incorrect basionym (original name):
+{
+  "name": "Taxon Name With Authorship",
+  "wrongBasionym": "Incorrect Original Name With Authorship",
+  "rightBasionym": "Correct Original Name With Authorship"
+}
+A basionym is the original name on which a later combination is based. Use
+this schema for an explicit basionym relationship problem, not SYNONYM ISSUE
+or NAME CHANGE merely because two names are involved.
+- wrongBasionym or rightBasionym may be null or omitted if unknown; at least
+  one must contain a non-empty name. Do not output both as null or empty.
+- Validate the taxon and every provided basionym with col_api_match.
+- Both basionym fields are compared ONLY against the full COL basionym label,
+  including authorship. A scientific name without authorship does not match.
+- Preserve user-supplied full basionym names exactly; do not trim whitespace,
+  collapse spaces, change case, correct authorship or replace them with a
+  normalized API label.
+- If the user omitted authorship, use a validated full label only when it is
+  for the same basionym name. Never substitute an accepted name or another
+  combination. If no suitable full label is available, keep the user's exact
+  name; do not invent authorship.
+- A name match validates a name's existence, NOT its basionym relationship.
+  Do not infer the current basionym from an accepted name or synonym list.
+  The checker reads the explicit "basionym" name relation in ChecklistBank.
+- With both fields, the issue closes only when rightBasionym matches and
+  wrongBasionym does not. With only wrongBasionym, it stays open while that
+  name matches. With only rightBasionym, it closes once that name matches.
+- A taxon with no recorded basionym matches neither field.
+
 EXAMPLES:
+
+Issue: "The basionym of Calopteryx splendens (Harris, 1780) should be Libellula splendens Harris, 1780"
+Step 1: Call col_api_match("Calopteryx splendens (Harris, 1780)")
+Step 2: Call col_api_match("Libellula splendens Harris, 1780")
+Step 3: Use WRONG BASIONYM, preserving the supplied full basionym:
+{"name": "Calopteryx splendens (Harris, 1780)", "wrongBasionym": null, "rightBasionym": "Libellula splendens Harris, 1780"}
+
+Issue: "Calopteryx splendens (Harris, 1780) has a whitespace error in its basionym: 'Libellula  splendens Harris, 1780' should be 'Libellula splendens Harris, 1780'"
+Step 1: Call col_api_match for the taxon and BOTH basionym strings
+Step 2: Preserve the double space in wrongBasionym even if the API normalizes it:
+{"name": "Calopteryx splendens (Harris, 1780)", "wrongBasionym": "Libellula  splendens Harris, 1780", "rightBasionym": "Libellula splendens Harris, 1780"}
 
 Issue: "Cercopida is a misspelling of Cercopidae"
 Step 1: Call col_api_match("Cercopida") - may not exist or return wrong match
@@ -347,7 +391,9 @@ VALIDATION WORKFLOW:
 4. Call col_api_match for EACH taxonomic name - DO NOT SKIP THIS STEP
 5. Wait for all validation results before proceeding
 6. **Extract the 'label' field from EACH col_api_match response** - this has the full name with authorship
-7. Use the full 'label' value (with authorship) in your JSON output when available
+7. Use the full 'label' value (with authorship) in your JSON output when available,
+   except for user-supplied full basionym names: preserve those exactly as
+   specified in WRONG BASIONYM, including case and whitespace
 8. If a name doesn't exist in COL, use the exact name from user input
 9. Output the final JSON with validated full names including authorship
 

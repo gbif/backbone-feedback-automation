@@ -17,6 +17,12 @@ R package with functions for validating taxonomic feedback against ChecklistBank
 ### Python Agent (`agent/`)
 Interactive command-line tool for testing and validating JSON feedback.
 
+The agent supports basionym issues using `name`, `wrongBasionym` and
+`rightBasionym`. Either basionym field may be omitted or `null`, but at least
+one must be provided. Basionym matching requires the full name with authorship
+and is exact, including case and whitespace. The agent preserves supplied
+full basionym names so it does not normalize away the error being reported.
+
 ### Shell Scripts
 
 #### `issue_check.sh`
