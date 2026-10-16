@@ -120,7 +120,7 @@ Creates or updates automated validation report comments on GitHub issues. This s
 - `issue_number`: GitHub issue number
 - `comment_id`: ID of the comment containing the JSON tag
 - `status`: Validation status (ISSUE_OPEN, ISSUE_CLOSED, JSON-TAG-ERROR)
-- `issue_type`: Type of issue (missingName, nameChange, wrongGroup, wrongRank, wrongStatus)
+- `issue_type`: Type of issue (missingName, nameChange, wrongGroup, wrongRank, wrongStatus, wrongBasionym)
 - `json_comment_body`: The JSON comment body to process
 
 **Behavior:**

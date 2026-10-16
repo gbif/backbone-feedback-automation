@@ -229,6 +229,51 @@ if(!is.null(s$heterotypic)) ss = c(ss, strip_html(s$heterotypic$labelHtml))
 return(ss)
 }
 
+# Get the basionym(s) of a taxon from its "basionym" name relations.
+# Returns a tibble with label and scientificName (zero rows if no basionym is
+# recorded), or NULL if the taxon info could not be retrieved.
+get_basionyms <- function(col_id = NULL, key = "3LXR") {
+  url <- paste0("https://api.checklistbank.org/dataset/", key, "/taxon/", col_id, "/info")
+
+  user <- Sys.getenv("GBIF_USER")
+  pwd <- Sys.getenv("GBIF_PWD")
+
+  info <- tryCatch({
+    resp <- if(user != "" && pwd != "") {
+      httr::GET(url, httr::authenticate(user, pwd))
+    } else {
+      httr::GET(url)
+    }
+    if(httr::status_code(resp) != 200) return(NULL)
+    httr::content(resp, as = "text", encoding = "UTF-8") |>
+      jsonlite::fromJSON(simplifyVector = FALSE)
+  }, error = function(e) NULL)
+
+  empty <- tibble::tibble(label = character(0), scientificName = character(0))
+  if(is.null(info) || is.null(info$usage)) return(NULL)
+
+  # Only relations where this taxon's own name points to its basionym; the
+  # endpoint also lists relations where this name is the basionym of others.
+  own_name_id <- info$usage$name$id
+  rels <- Filter(function(r) {
+    identical(r$type, "basionym") && identical(r$nameId, own_name_id)
+  }, info$nameRelations %||% list())
+  if(length(rels) == 0) return(empty)
+
+  basionyms <- lapply(rels, function(r) {
+    n <- info$names[[r$relatedNameId]]
+    if(is.null(n)) return(NULL)
+    tibble::tibble(
+      label = n$label %||% NA_character_,
+      scientificName = n$scientificName %||% NA_character_
+    )
+  })
+  basionyms <- do.call(rbind, Filter(Negate(is.null), basionyms))
+  if(is.null(basionyms)) return(empty)
+
+  unique(basionyms)
+}
+
 # Get dataset source information
 get_dataset_source <- function(
   id = NULL,
