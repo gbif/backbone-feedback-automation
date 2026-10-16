@@ -23,6 +23,7 @@ devtools::install_github("gbif/backbone-feedback", subdir = "gbifbf")
 - `cb_name_usage()`: Query ChecklistBank API for name usage information
 - `cb_name_usage_search()`: Search ChecklistBank for taxonomic information
 - `wrong_rank()`: Check if a taxon has the correct rank
+- `wrong_basionym()`: Check if a taxon has the correct basionym (uses the explicit basionym name relation in ChecklistBank)
 - `strip_html()`: Helper function to remove HTML tags
 
 ## Usage
@@ -38,5 +39,12 @@ status <- wrong_rank(list(
   name = "Animalia",
   wrongRank = "phylum",
   rightRank = "kingdom"
+))
+
+# Check basionym (either field may be omitted or left empty)
+status <- wrong_basionym(list(
+  name = "Muusoctopus pseudonymus (Grimpe, 1922)",
+  wrongBasionym = "",
+  rightBasionym = "Atlantoctopus pseudonymus Grimpe, 1922"
 ))
 ```

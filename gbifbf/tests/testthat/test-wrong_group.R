@@ -61,15 +61,13 @@ expect_equal(
     )),
     "ISSUE_OPEN")
 
-# Test issue #727 - HTML tags in classification
-# This captures the edge case where classification parents contain HTML tags like <i>Epidemia</i>
-# that need to be stripped before matching group names
+# Check the current COL classification for the synonym Lycaena helloides
 expect_equal(
     wrong_group(
     list(
     name = "Lycaena helloides (Boisduval, 1852)",
     wrongGroup = "Sesia Fabricius, 1775",
-    rightGroup = "Epidemia Scudder, 1876"
+    rightGroup = "Tharsalea (Epidemia) Scudder, 1876"
     )),
     "ISSUE_CLOSED")
 

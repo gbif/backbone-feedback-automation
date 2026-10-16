@@ -55,12 +55,12 @@ test_that("wrong_group_report returns correct status and prints output", {
   
   expect_equal(result5, "ISSUE_OPEN")
   
-  # Test HTML tag handling
+  # Check the current COL classification for the synonym Lycaena helloides
   result6 <- wrong_group_report(
     list(
       name = "Lycaena helloides (Boisduval, 1852)",
       wrongGroup = "Sesia Fabricius, 1775",
-      rightGroup = "Epidemia Scudder, 1876"
+      rightGroup = "Tharsalea (Epidemia) Scudder, 1876"
     ))
   
   expect_equal(result6, "ISSUE_CLOSED")

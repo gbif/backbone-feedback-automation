@@ -433,6 +433,46 @@ format_markdown_report <- function(xx, issue_type) {
     }
   }
   
+  if(issue_type == "wrongBasionym") {
+    name_result <- suppressMessages(name_exists(xx$name))
+    wrong_b <- gbifbf:::basionym_field(xx$wrongBasionym)
+    right_b <- gbifbf:::basionym_field(xx$rightBasionym)
+    output <- c(output, sprintf("**Name:** %s  \n", xx$name))
+    output <- c(output, sprintf("**Wrong Basionym:** %s  \n", if(is.null(wrong_b)) "not specified" else wrong_b))
+    output <- c(output, sprintf("**Right Basionym:** %s\n\n", if(is.null(right_b)) "not specified" else right_b))
+
+    if(name_result$exists) {
+      ids_to_check <- if(name_result$multiple) name_result$ids else list(name_result$id)
+      output <- c(output, sprintf("**Found in COL:** %s\n",
+                                  paste(sapply(ids_to_check, function(id) col_link(id, id)), collapse=", ")))
+
+      for(id in ids_to_check) {
+        if(name_result$multiple) {
+          output <- c(output, sprintf("\n**%s:**\n", col_link(id, paste0("ID ", id))))
+        } else {
+          output <- c(output, "\n")
+        }
+        b <- suppressMessages(gbifbf:::get_basionyms(id))
+        if(is.null(b)) {
+          output <- c(output, "- Current basionym: **unable to retrieve**\n")
+          next
+        }
+        current <- if(nrow(b) == 0) "none recorded" else paste(b$label, collapse="; ")
+        output <- c(output, sprintf("- Current basionym: **%s**\n", current))
+        if(!is.null(wrong_b)) {
+          output <- c(output, sprintf("- Wrong basionym still present: %s\n",
+                                      if(gbifbf:::basionym_matches(wrong_b, b)) "❌ yes" else "✅ no"))
+        }
+        if(!is.null(right_b)) {
+          output <- c(output, sprintf("- Right basionym present: %s\n",
+                                      if(gbifbf:::basionym_matches(right_b, b)) "✅ yes" else "❌ no"))
+        }
+      }
+    } else {
+      output <- c(output, sprintf("**Status:** ❌ Name not found in COL\n"))
+    }
+  }
+
   if(issue_type == "wrongStatus") {
     name_result <- suppressMessages(name_exists(xx$name))
     output <- c(output, sprintf("**Name:** %s  \n", xx$name))
@@ -653,6 +693,12 @@ if("wrongStatus" %in% names) {
    if(show_reports) syn_issue_report(xx)
    if(report_output_mode) report_text = format_markdown_report(xx, "wrongStatus")
    issue_type = "wrongStatus"
+}
+if("wrongBasionym" %in% names || "rightBasionym" %in% names) {
+   issue_status = if(report_output_mode) suppressMessages(wrong_basionym(xx)) else wrong_basionym(xx)
+   if(show_reports) wrong_basionym_report(xx)
+   if(report_output_mode) report_text = format_markdown_report(xx, "wrongBasionym")
+   issue_type = "wrongBasionym"
 }
 if(is.null(issue_status)) { issue_status = "JSON-TAG-ERROR" }
 return(list(issue_status=issue_status,issue_type=issue_type,report=report_text))
