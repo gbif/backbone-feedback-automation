@@ -11,6 +11,9 @@ This repository contains tools to automatically:
 
 ## Components
 
+For JSON comment templates and annotation guidance, see
+[JSON comments for automation](JSON-comments-for-automation.md).
+
 ### R Package (`gbifbf/`)
 R package with functions for validating taxonomic feedback against ChecklistBank.
 
