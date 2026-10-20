@@ -4,7 +4,7 @@ Documentation: [JSON comments for automation](https://github.com/gbif/backbone-f
 
 ### Introduction
 
-In this document we describe our **backbone feedback automation** system. This is an ongoing effort to describe taxonomic issues in a structured way that can be machine checked. We now describe requests for correction to the [Catalogue of Life](https://www.gbif.org/dataset/7ddf754f-d193-4cc9-b351-99906754a03b) using assertions written a `JSON` comment.
+In this document we describe our **backbone feedback automation** system. This is an ongoing effort to describe taxonomic issues in a structured way that can be machine checked. We now describe requests for correction to the [Catalogue of Life](https://www.gbif.org/dataset/7ddf754f-d193-4cc9-b351-99906754a03b) using assertions written in a `JSON` comment.
 
 > Note, that just because we have written a `JSON` description of the issue, doesn't mean we described it in the right way or that the original comment is correct. The structured `JSON` comments merely exist to describe the issue in a clear, machine-readable way.
 
