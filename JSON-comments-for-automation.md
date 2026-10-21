@@ -149,3 +149,4 @@ If multiple proposed changes are found in one issue, one can use a `JSON` array.
 * Use the full scientific name with authorship.
 * Put the examples, in your GitHub saved replies to quickly generate the correct template.
 * Always include the "Why is this here?" link, so that other users know why that comment exists.
+* Keep the documentation link outside the JSON code block. Automation accepts both the current documentation link and legacy wiki links.

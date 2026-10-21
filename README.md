@@ -14,6 +14,11 @@ This repository contains tools to automatically:
 For JSON comment templates and annotation guidance, see
 [JSON comments for automation](JSON-comments-for-automation.md).
 
+Run the offline comment-parsing regression tests from the repository root:
+```bash
+Rscript tests/test-process-json.R
+```
+
 ### R Package (`gbifbf/`)
 R package with functions for validating taxonomic feedback against ChecklistBank.
 

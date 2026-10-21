@@ -33,17 +33,17 @@ if (file.exists(original_string)) {
   original_string <- gsub('\\\\\\\\', '\\\\', original_string)
 }
 
-link <- "\\[why is this here\\?\\]\\(https://github.com/gbif/backbone-feedback/wiki/JSON-comments-for-automation-%E2%80%90-Experimental\\)"
+link <- "\\[why is this here\\?\\]\\([^\\r\\n)]*\\)"
 
-# Extract just the JSON portion between "// json for auto-checking" and the wiki link
-json_pattern <- "// json for auto-checking\\s*\\n(.*?)\\[why is this here\\?\\]"
+# Match across lines without depending on the documentation link destination.
+json_pattern <- "(?s)// json for auto-checking\\s*\\n(.*?)\\[why is this here\\?\\]"
 json_match <- regmatches(original_string, regexec(json_pattern, original_string, perl = TRUE))[[1]]
 
 if(length(json_match) > 1) {
   json_text <- json_match[2]  # Get the captured group
 } else {
   # Fallback to old method if pattern doesn't match
-  json_text <- gsub(link, "", original_string) %>%
+  json_text <- gsub(link, "", original_string, perl = TRUE) %>%
     gsub("// json for auto-checking", "", .) %>%
     gsub("## 🤖 Proposed JSON Tags", "", .) %>%
     gsub("###.*", "", .)  # Remove everything after ### headers
@@ -51,6 +51,7 @@ if(length(json_match) > 1) {
 
 # Clean up the JSON text: remove carriage returns and trim whitespace
 json_text <- gsub("\r", "", json_text)  # Remove Windows line endings
+json_text <- gsub("(?m)^\\h*```(?:json)?\\h*$", "", json_text, perl = TRUE)
 json_text <- trimws(json_text)  # Trim leading/trailing whitespace
 
 xx = jsonlite::fromJSON(json_text, simplifyVector = FALSE)
